@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="A Horaly guarda quem pediu horário e ficou sem, e chama quando a vaga abre. Agendamento inteligente para quem vive de hora marcada.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Horaly · Seu tempo vale ouro">
+<meta property="og:description" content="A agenda que não só marca horário. Ela ocupa o horário.">
+<meta property="og:locale" content="pt_BR">
+<meta name="theme-color" content="#1E0F3A">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 48 48\'%3E%3Ccircle cx=\'24\' cy=\'24\' r=\'18\' fill=\'none\' stroke=\'%23F043B4\' stroke-width=\'6\'/%3E%3Cpath d=\'M24 13v11l8 5\' fill=\'none\' stroke=\'%23F043B4\' stroke-width=\'6\' stroke-linecap=\'round\'/%3E%3C/svg%3E">
+<title>Horaly · Agendamento inteligente</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Public+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+:root{
+  --fundo:#1E0F3A;
+  --fundo-2:#160B2B;
+  --card:rgba(255,255,255,.055);
+  --card-2:rgba(255,255,255,.085);
+  --linha:rgba(214,178,255,.18);
+  --txt:#FFFFFF;
+  --txt-2:#D7C7EC;
+  --txt-3:#A693C2;
+  --rosa:#F043B4;
+  --rosa-2:#FF6FD0;
+  --roxo:#A855F7;
+  --verde:#4ADE80;
+  --max:1140px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  background:
+    radial-gradient(90% 60% at 85% -5%, rgba(240,67,180,.22), transparent 60%),
+    radial-gradient(70% 50% at 0% 25%, rgba(168,85,247,.2), transparent 60%),
+    linear-gradient(180deg, var(--fundo), var(--fundo-2) 60%, #120821);
+  background-attachment:fixed;
+  color:var(--txt);
+  font-family:"Public Sans",-apple-system,BlinkMacSystemFont,sans-serif;
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+}
+img,svg{max-width:100%}
+a{color:inherit}
+.wrap{width:100%;max-width:var(--max);margin:0 auto;padding:0 20px}
+
+/* ---------- topo ---------- */
+header{
+  position:sticky;top:0;z-index:40;
+  backdrop-filter:blur(14px);
+  background:linear-gradient(180deg, rgba(22,11,43,.92), rgba(22,11,43,.62));
+  border-bottom:1px solid var(--linha);
+}
+.topo{display:flex;align-items:center;gap:16px;padding:13px 0}
+.logo{display:flex;align-items:center;gap:10px;flex:none}
+.logo svg{width:30px;height:30px;flex:none}
+.logo .nome{font-family:"Bricolage Grotesque",sans-serif;font-weight:700;font-size:21px;letter-spacing:-.02em}
+nav{margin-left:auto;display:flex;gap:22px;align-items:center}
+nav a{font-size:14.5px;color:var(--txt-2);text-decoration:none}
+nav a:hover{color:#fff}
+@media (max-width:760px){nav a:not(.btn){display:none}}
+.btn{
+  display:inline-block;background:linear-gradient(135deg,var(--rosa),var(--roxo));
+  color:#fff;text-decoration:none;font-weight:700;font-size:15px;
+  padding:12px 20px;border-radius:999px;border:0;cursor:pointer;
+  box-shadow:0 10px 30px -12px rgba(240,67,180,.8);
+  transition:transform .15s ease, box-shadow .15s ease;
+}
+.btn:hover{transform:translateY(-1px);box-shadow:0 14px 34px -12px rgba(240,67,180,.95)}
+.btn.sec{background:transparent;border:1.5px solid var(--linha);box-shadow:none;font-weight:600}
+.btn.peq{padding:9px 16px;font-size:14px}
+
+/* ---------- hero ---------- */
+.hero{padding:clamp(48px,9vw,96px) 0 clamp(40px,7vw,72px)}
+.selo{
+  display:inline-flex;align-items:center;gap:8px;font-family:"IBM Plex Mono",monospace;
+  font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--rosa-2);
+  border:1px solid var(--linha);border-radius:999px;padding:7px 14px;margin-bottom:22px;
+}
+.selo .ponto{width:7px;height:7px;border-radius:50%;background:var(--rosa);box-shadow:0 0 12px var(--rosa)}
+h1{
+  font-family:"Bricolage Grotesque",sans-serif;font-weight:800;
+  font-size:clamp(38px,7.6vw,76px);line-height:1.02;letter-spacing:-.035em;text-wrap:balance;
+}
+h1 .pt{color:var(--rosa)}
+.hero .linha2{color:var(--txt-2);font-weight:600;font-size:clamp(20px,3.2vw,30px);margin-top:10px;letter-spacing:-.01em}
+.hero p.lead{font-size:clamp(16px,2.1vw,19px);color:var(--txt-2);max-width:56ch;margin-top:20px}
+.acoes{display:flex;flex-wrap:wrap;gap:12px;margin-top:30px}
+
+.numeros{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:clamp(36px,6vw,56px)}
+@media (max-width:680px){.numeros{grid-template-columns:1fr;gap:10px}}
+.num{background:var(--card);border:1px solid var(--linha);border-radius:16px;padding:20px}
+.num .v{font-family:"Bricolage Grotesque",sans-serif;font-weight:800;font-size:clamp(28px,4.6vw,40px);
+  line-height:1.05;letter-spacing:-.02em;background:linear-gradient(100deg,#fff,var(--rosa-2));
+  -webkit-background-clip:text;background-clip:text;color:transparent}
+.num .r{font-size:14px;color:var(--txt-2);margin-top:6px;line-height:1.4}
+
+/* ---------- seções ---------- */
+section{padding:clamp(48px,8vw,90px) 0}
+.rotulo{font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--rosa-2);font-weight:600;margin-bottom:14px}
+h2{font-family:"Bricolage Grotesque",sans-serif;font-weight:700;font-size:clamp(27px,4.4vw,44px);
+  line-height:1.1;letter-spacing:-.025em;text-wrap:balance}
+h2 + p.sub{color:var(--txt-2);font-size:clamp(16px,2vw,18.5px);margin-top:14px;max-width:62ch}
+
+.cards{display:grid;gap:16px;margin-top:34px}
+.g3{grid-template-columns:repeat(3,1fr)}
+.g2{grid-template-columns:repeat(2,1fr)}
+@media (max-width:860px){.g3,.g2{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--linha);border-radius:18px;padding:24px;position:relative;overflow:hidden}
+.card::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(120% 80% at 0% 0%, rgba(240,67,180,.1), transparent 55%)}
+.card h3{font-family:"Bricolage Grotesque",sans-serif;font-weight:700;font-size:20px;letter-spacing:-.015em;margin-bottom:8px}
+.card p{color:var(--txt-2);font-size:15.5px}
+.card .passo{font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--rosa-2);letter-spacing:.14em;margin-bottom:10px}
+.card .ic{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;font-size:19px;
+  background:linear-gradient(135deg, rgba(240,67,180,.28), rgba(168,85,247,.22));margin-bottom:14px}
+
+/* fala */
+.falas{display:grid;gap:16px;grid-template-columns:repeat(2,1fr);margin-top:30px}
+@media (max-width:860px){.falas{grid-template-columns:1fr}}
+.fala{background:var(--card);border:1px solid var(--linha);border-left:3px solid var(--rosa);border-radius:14px;padding:20px}
+.fala q{font-size:16.5px;font-style:italic;color:#fff;quotes:"“" "”";line-height:1.5}
+.fala .quem{display:block;margin-top:10px;font-size:13.5px;color:var(--txt-3)}
+
+/* lista */
+.lista{display:flex;flex-direction:column;gap:14px;margin-top:28px}
+.item{display:flex;gap:14px;align-items:flex-start;background:var(--card);border:1px solid var(--linha);border-radius:14px;padding:18px}
+.item .ck{width:26px;height:26px;border-radius:50%;flex:none;display:grid;place-items:center;font-size:13px;font-weight:700;
+  background:rgba(74,222,128,.16);color:var(--verde);border:1px solid rgba(74,222,128,.35)}
+.item b{display:block;font-size:16.5px;margin-bottom:3px}
+.item span.d{color:var(--txt-2);font-size:15px}
+
+/* para quem */
+.chips{display:flex;flex-wrap:wrap;gap:10px;margin-top:26px}
+.chip{background:var(--card-2);border:1px solid var(--linha);border-radius:999px;padding:10px 16px;font-size:15px;color:var(--txt-2)}
+
+/* planos */
+.planos{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:32px;align-items:stretch}
+@media (max-width:860px){.planos{grid-template-columns:1fr}}
+.plano{background:var(--card);border:1px solid var(--linha);border-radius:20px;padding:26px;display:flex;flex-direction:column}
+.plano.destaque{background:linear-gradient(160deg, rgba(240,67,180,.2), rgba(168,85,247,.14));border-color:rgba(240,67,180,.5);
+  box-shadow:0 20px 50px -26px rgba(240,67,180,.7)}
+.plano .fita{align-self:flex-start;font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+  background:rgba(240,67,180,.22);color:var(--rosa-2);border:1px solid rgba(240,67,180,.4);border-radius:999px;padding:5px 11px;margin-bottom:14px}
+.plano .pnome{font-family:"Bricolage Grotesque",sans-serif;font-weight:700;font-size:19px}
+.plano .ppreco{font-family:"Bricolage Grotesque",sans-serif;font-weight:800;font-size:42px;letter-spacing:-.03em;margin-top:10px;line-height:1}
+.plano .ppreco small{font-size:16px;font-weight:600;color:var(--txt-3);letter-spacing:0}
+.plano .pquem{color:var(--txt-2);font-size:15px;margin-top:8px}
+.plano ul{list-style:none;margin-top:18px;display:flex;flex-direction:column;gap:10px;flex:1}
+.plano li{display:flex;gap:9px;font-size:15px;color:var(--txt-2);align-items:flex-start}
+.plano li::before{content:"✓";color:var(--verde);font-weight:800;flex:none}
+.plano .btn{margin-top:20px;text-align:center}
+.contaconta{background:var(--card);border:1px solid var(--linha);border-radius:16px;padding:20px;margin-top:18px;
+  font-size:15.5px;color:var(--txt-2)}
+.contaconta b{color:#fff}
+
+/* time */
+.time{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:30px}
+@media (max-width:760px){.time{grid-template-columns:repeat(2,1fr)}}
+.pessoa{background:var(--card);border:1px solid var(--linha);border-radius:16px;padding:20px;text-align:center}
+.pessoa .av{width:56px;height:56px;border-radius:50%;margin:0 auto 12px;display:grid;place-items:center;
+  font-family:"Bricolage Grotesque",sans-serif;font-weight:800;font-size:18px;
+  background:linear-gradient(140deg,var(--rosa),var(--roxo));box-shadow:0 0 24px rgba(240,67,180,.4)}
+.pessoa b{display:block;font-size:15.5px}
+.pessoa span{font-size:13px;color:var(--txt-3)}
+
+/* formulário */
+#contato{scroll-margin-top:70px}
+.formbox{background:linear-gradient(150deg, rgba(240,67,180,.14), rgba(168,85,247,.1));
+  border:1px solid var(--linha);border-radius:22px;padding:clamp(22px,4vw,38px)}
+.campos{display:grid;gap:14px;grid-template-columns:1fr 1fr;margin-top:24px}
+@media (max-width:680px){.campos{grid-template-columns:1fr}}
+.campo{display:flex;flex-direction:column;gap:7px}
+.campo.largo{grid-column:1/-1}
+label{font-size:12.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--txt-3)}
+input,select,textarea{
+  font:inherit;font-size:16px;color:#fff;background:rgba(10,4,20,.5);
+  border:1.5px solid var(--linha);border-radius:12px;padding:13px 15px;width:100%;
+}
+input::placeholder,textarea::placeholder{color:#8e7aab}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--rosa);box-shadow:0 0 0 3px rgba(240,67,180,.2)}
+select option{background:#1E0F3A;color:#fff}
+textarea{resize:vertical;min-height:84px}
+.erro{font-size:13px;color:#FF8AB8;font-weight:600}
+.erro[hidden]{display:none}
+.envio{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-top:22px}
+.nota{font-size:13px;color:var(--txt-3);margin-top:14px;line-height:1.5}
+.ok{display:flex;gap:14px;align-items:flex-start;background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.35);
+  border-radius:16px;padding:20px;margin-top:22px}
+.ok[hidden]{display:none}
+.ok .ck{width:30px;height:30px;border-radius:50%;flex:none;display:grid;place-items:center;
+  background:var(--verde);color:#09301c;font-weight:800}
+.alt{margin-top:20px;padding-top:20px;border-top:1px solid var(--linha);display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.alt span{font-size:14px;color:var(--txt-3);margin-right:4px}
+
+/* rodapé */
+footer{border-top:1px solid var(--linha);padding:34px 0 46px;color:var(--txt-3);font-size:14px}
+.rodape{display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:space-between}
+.rodape .fonte{font-size:12.5px;max-width:62ch;line-height:1.5}
+
+:focus-visible{outline:2px solid var(--rosa);outline-offset:3px;border-radius:6px}
+@media (prefers-reduced-motion: reduce){*{animation:none !important;transition:none !important}html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap topo">
+    <a class="logo" href="#topo" aria-label="Horaly, início">
+      <svg viewBox="0 0 48 48" role="img" aria-hidden="true">
+        <defs>
+          <linearGradient id="gm" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#FF6FD0"/><stop offset="1" stop-color="#A855F7"/>
+          </linearGradient>
+        </defs>
+        <circle cx="24" cy="24" r="18" fill="none" stroke="url(#gm)" stroke-width="5"/>
+        <path d="M24 13.5V24l7.5 4.6" fill="none" stroke="url(#gm)" stroke-width="5"
+              stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span class="nome">Horaly</span>
+    </a>
+    <nav>
+      <a href="#problema">O problema</a>
+      <a href="#produto">Como funciona</a>
+      <a href="#planos">Planos</a>
+      <a href="#pesquisa">A pesquisa</a>
+      <a href="#time">Time</a>
+      <a class="btn peq" href="#contato">Quero testar</a>
+    </nav>
+  </div>
+</header>
+
+<main id="topo">
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="wrap">
+      <span class="selo"><span class="ponto"></span>Agendamento inteligente</span>
+      <h1>Seu tempo vale ouro<span class="pt">.</span><br>Sua agenda também<span class="pt">.</span></h1>
+      <div class="linha2">A agenda que não só marca horário. Ela ocupa o horário.</div>
+      <p class="lead">Todo dia um cliente desmarca e a cadeira fica vazia. Todo dia alguém pergunta por um horário que você não tem, e esse pedido se perde no WhatsApp. A Horaly junta as duas pontas.</p>
+      <div class="acoes">
+        <a class="btn" href="#contato">Quero testar na minha agenda</a>
+        <a class="btn sec" href="#produto">Ver como funciona</a>
+      </div>
+
+      <div class="numeros">
+        <div class="num">
+          <div class="v">R$ 742</div>
+          <div class="r">é a perda mediana por mês de um profissional autônomo com faltas e horários vazios.</div>
+        </div>
+        <div class="num">
+          <div class="v">2 a 15</div>
+          <div class="r">furos de agenda por mês, conforme o segmento e o tamanho da carteira.</div>
+        </div>
+        <div class="num">
+          <div class="v">8 de 10</div>
+          <div class="r">profissionais que entrevistamos toparam testar a Horaly na própria agenda.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROBLEMA -->
+  <section id="problema">
+    <div class="wrap">
+      <div class="rotulo">O problema</div>
+      <h2>A cadeira vazia não avisa. Ela só cobra.</h2>
+      <p class="sub">Conversamos com dez profissionais de serviço, em nove profissões diferentes. A rotina é a mesma em todas.</p>
+      <div class="cards g3">
+        <div class="card">
+          <div class="ic">⏳</div>
+          <h3>O cliente some em cima da hora</h3>
+          <p>Avisa 20 minutos antes, ou simplesmente não aparece. Sobra um buraco que ninguém consegue preencher a tempo.</p>
+        </div>
+        <div class="card">
+          <div class="ic">💬</div>
+          <h3>O pedido morre no WhatsApp</h3>
+          <p>Toda semana alguém pergunta por um horário que não existe. O profissional responde que não tem, e aquele pedido se perde para sempre.</p>
+        </div>
+        <div class="card">
+          <div class="ic">🕐</div>
+          <h3>O tempo nunca é o que está marcado</h3>
+          <p>O serviço marcado para 45 minutos leva uma hora e oito. A agenda atrasa em cascata e o dia inteiro desanda.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRODUTO -->
+  <section id="produto">
+    <div class="wrap">
+      <div class="rotulo">Como funciona</div>
+      <h2>A Horaly guarda quem ficou de fora e chama quando abre.</h2>
+      <p class="sub">Três movimentos simples, rodando no fundo enquanto o profissional atende.</p>
+      <div class="cards g3">
+        <div class="card">
+          <div class="passo">PASSO 01</div>
+          <h3>Guarda a demanda perdida</h3>
+          <p>Cada vez que você responde “não tenho esse horário”, a Horaly registra quem pediu, para quando e qual serviço. Vira uma fila viva de interessados.</p>
+        </div>
+        <div class="card">
+          <div class="passo">PASSO 02</div>
+          <h3>Avisa antes de a vaga virar prejuízo</h3>
+          <p>Ela acompanha quem costuma faltar, dispara a confirmação na hora certa e, quando o horário abre, mostra quem tem mais chance de aceitar e por quê.</p>
+        </div>
+        <div class="card">
+          <div class="passo">PASSO 03</div>
+          <h3>Você aprova, ela cuida do resto</h3>
+          <p>O convite sai com a sua mensagem, um cliente por vez, com o horário segurado. Ninguém recebe a promessa da mesma vaga ao mesmo tempo.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DIFERENCIAL -->
+  <section>
+    <div class="wrap">
+      <div class="rotulo">O que nos diferencia</div>
+      <h2>Automação com a decisão na mão de quem conhece o cliente.</h2>
+      <div class="lista">
+        <div class="item">
+          <span class="ck">✓</span>
+          <span>
+            <b>Você aprova antes de qualquer mensagem sair</b>
+            <span class="d">Nenhum dos dez profissionais que ouvimos aceitou que o sistema remarcasse sozinho. A Horaly sugere, você decide, ela executa.</span>
+          </span>
+        </div>
+        <div class="item">
+          <span class="ck">✓</span>
+          <span>
+            <b>Convite um por vez, com a vaga reservada</b>
+            <span class="d">Nada de disparar para a lista inteira e depois dizer a alguém que o horário já foi. O constrangimento seria seu, não nosso.</span>
+          </span>
+        </div>
+        <div class="item">
+          <span class="ck">✓</span>
+          <span>
+            <b>Cada sugestão explica de onde veio</b>
+            <span class="d">“Pediu sábado no WhatsApp”, “aceitou encaixe três vezes”, “mora a oito minutos”. Percentual sem motivo não serve para decidir.</span>
+          </span>
+        </div>
+        <div class="item">
+          <span class="ck">✓</span>
+          <span>
+            <b>O tempo é medido, não chutado</b>
+            <span class="d">A Horaly aprende quanto cada serviço realmente leva, por profissional e por cliente, e sugere o ajuste na agenda.</span>
+          </span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PARA QUEM -->
+  <section>
+    <div class="wrap">
+      <div class="rotulo">Para quem é</div>
+      <h2>Quem vive de hora marcada.</h2>
+      <p class="sub">Começamos por quem tem agenda cheia, atendimento curto e já faz encaixe na mão todos os dias.</p>
+      <div class="chips">
+        <span class="chip">Designer de sobrancelhas</span>
+        <span class="chip">Barbearia</span>
+        <span class="chip">Manicure e nail designer</span>
+        <span class="chip">Lash designer</span>
+        <span class="chip">Depilação</span>
+        <span class="chip">Estética e bem-estar</span>
+        <span class="chip">Massoterapia</span>
+        <span class="chip">Salões com equipe</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- PLANOS -->
+  <section id="planos">
+    <div class="wrap">
+      <div class="rotulo">Planos</div>
+      <h2>Você paga uma fração do que deixa de ganhar.</h2>
+      <p class="sub">Assinatura mensal, sem fidelidade e sem comissão sobre o atendimento. O horário recuperado é inteiro seu.</p>
+
+      <div class="planos">
+        <div class="plano">
+          <div class="pnome">Essencial</div>
+          <div class="ppreco">R$ 99<small> /mês</small></div>
+          <div class="pquem">Para quem atende sozinho e está começando a organizar a agenda.</div>
+          <ul>
+            <li>Fila de quem pediu e ficou sem horário</li>
+            <li>Lembrete inteligente e confirmação</li>
+            <li>Previsão de tempo por serviço</li>
+          </ul>
+          <a class="btn sec" href="#contato">Quero testar</a>
+        </div>
+
+        <div class="plano destaque">
+          <span class="fita">Mais completo para autônomo</span>
+          <div class="pnome">Profissional</div>
+          <div class="ppreco">R$ 199<small> /mês</small></div>
+          <div class="pquem">Para quem vive de agenda cheia e perde dinheiro a cada furo.</div>
+          <ul>
+            <li>Tudo do Essencial</li>
+            <li>Reocupação de horários com sugestão explicada</li>
+            <li>Convite um por vez, com a vaga segurada</li>
+            <li>Tempo medido por cliente e por serviço</li>
+          </ul>
+          <a class="btn" href="#contato">Quero testar</a>
+        </div>
+
+        <div class="plano">
+          <div class="pnome">Studio</div>
+          <div class="ppreco">R$ 499<small> /mês</small></div>
+          <div class="pquem">Para salão, barbearia ou clínica com equipe.</div>
+          <ul>
+            <li>Tudo do Profissional</li>
+            <li>Vários profissionais, com permissões e comissão</li>
+            <li>Painel de ocupação por pessoa e por unidade</li>
+            <li>Alertas de queda e de horário perdido</li>
+          </ul>
+          <a class="btn sec" href="#contato">Falar com a gente</a>
+        </div>
+      </div>
+
+      <div class="contaconta">
+        <b>A conta que importa:</b> a perda mediana que medimos foi de R$ 742 por mês. Recuperar dois ou três horários já cobre a assinatura, e o resto fica no bolso de quem atende.
+      </div>
+    </div>
+  </section>
+
+  <!-- PESQUISA -->
+  <section id="pesquisa">
+    <div class="wrap">
+      <div class="rotulo">A pesquisa</div>
+      <h2>A Horaly nasceu de dez conversas, não de um palpite.</h2>
+      <p class="sub">Entrevistamos dez profissionais em nove profissões, reconstruindo o último incidente real de cada um antes de mostrar qualquer tela.</p>
+      <div class="falas">
+        <div class="fala">
+          <q>A cliente não vai ficar brava com o aplicativo. Vai ficar brava comigo.</q>
+          <span class="quem">Manicure, 11 anos de profissão</span>
+        </div>
+        <div class="fala">
+          <q>Meu problema não é achar gente, é lembrar quem perguntou hoje e qual serviço cabia.</q>
+          <span class="quem">Barbeiro, 7 anos de profissão</span>
+        </div>
+        <div class="fala">
+          <q>Preencher três horas com uma escova não significa que eu recuperei uma coloração.</q>
+          <span class="quem">Cabeleireira, 14 anos de profissão</span>
+        </div>
+        <div class="fala">
+          <q>Isso é o que eu faço no WhatsApp, só que eu faço correndo entre uma cliente e outra.</q>
+          <span class="quem">Designer de sobrancelhas, 6 anos de profissão</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TIME -->
+  <section id="time">
+    <div class="wrap">
+      <div class="rotulo">Quem está por trás</div>
+      <h2>Time de Marketing Digital e Data Science.</h2>
+      <p class="sub">Projeto do Startup ONE, na FIAP. Juntamos dados e comunicação para resolver um problema que vimos de perto.</p>
+      <div class="time">
+        <div class="pessoa"><div class="av">DB</div><b>Diego Barreto</b><span>Produto e dados</span></div>
+        <div class="pessoa"><div class="av">JR</div><b>Jefferson Ribeiro</b><span>Negócio</span></div>
+        <div class="pessoa"><div class="av">JF</div><b>Jônatas Ferreira</b><span>Pesquisa</span></div>
+        <div class="pessoa"><div class="av">KA</div><b>Kassiane Alves</b><span>Marca e comunicação</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTATO -->
+  <section id="contato">
+    <div class="wrap">
+      <div class="formbox">
+        <div class="rotulo">Lista de testes</div>
+        <h2>Quer testar a Horaly na sua agenda?</h2>
+        <p class="sub">Deixe seu contato. Vamos escolher um grupo pequeno de profissionais para rodar as primeiras semanas junto com a gente, de graça.</p>
+
+        <form id="form" novalidate>
+          <div class="campos">
+            <div class="campo">
+              <label for="nome">Nome</label>
+              <input id="nome" name="nome" autocomplete="name" placeholder="Como podemos te chamar">
+              <span class="erro" id="e-nome" hidden>Diga seu nome.</span>
+            </div>
+            <div class="campo">
+              <label for="zap">WhatsApp</label>
+              <input id="zap" name="zap" inputmode="numeric" autocomplete="tel" placeholder="(11) 90000-0000">
+              <span class="erro" id="e-zap" hidden>Telefone incompleto. Use DDD mais 8 ou 9 dígitos.</span>
+            </div>
+            <div class="campo">
+              <label for="prof">O que você faz</label>
+              <select id="prof" name="prof">
+                <option value="">Escolha uma opção</option>
+                <option>Sobrancelhas</option>
+                <option>Barbearia</option>
+                <option>Manicure / nail designer</option>
+                <option>Lash designer</option>
+                <option>Depilação</option>
+                <option>Estética / bem-estar</option>
+                <option>Cabelo</option>
+                <option>Massoterapia / fisioterapia</option>
+                <option>Salão ou clínica com equipe</option>
+                <option>Outro</option>
+              </select>
+              <span class="erro" id="e-prof" hidden>Escolha o que você faz.</span>
+            </div>
+            <div class="campo">
+              <label for="furos">Furos de agenda por semana</label>
+              <select id="furos" name="furos">
+                <option value="">Escolha uma opção</option>
+                <option>Nenhum</option>
+                <option>1 a 2</option>
+                <option>3 a 5</option>
+                <option>Mais de 5</option>
+              </select>
+            </div>
+            <div class="campo largo">
+              <label for="obs">Quer contar alguma coisa? (opcional)</label>
+              <textarea id="obs" name="obs" placeholder="O que mais te atrapalha na agenda hoje"></textarea>
+            </div>
+          </div>
+
+          <div class="envio">
+            <button class="btn" type="submit" id="enviar">Entrar na lista</button>
+            <span class="nota" style="margin:0" id="status"></span>
+          </div>
+        </form>
+
+        <div class="ok" id="ok" hidden>
+          <span class="ck">✓</span>
+          <span>
+            <b id="ok-t">Pronto, você está na lista.</b>
+            <span class="d" style="display:block;color:var(--txt-2);font-size:15px;margin-top:4px" id="ok-d">A gente chama no WhatsApp para combinar o teste.</span>
+          </span>
+        </div>
+
+        <div class="alt" id="alt" hidden>
+          <span>Prefere falar direto com a gente?</span>
+          <a class="btn sec peq" id="btn-zap" href="#" target="_blank" rel="noopener">Chamar no WhatsApp</a>
+          <a class="btn sec peq" id="btn-mail" href="#" target="_blank" rel="noopener">Mandar e-mail</a>
+          <button class="btn sec peq" type="button" id="btn-copiar">Copiar meus dados</button>
+        </div>
+
+        <p class="nota">Guardamos só nome, contato e profissão, para falar sobre o teste. Nada de mensagem automática, e você pode pedir para sair a qualquer momento.</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap rodape">
+    <div class="logo">
+      <svg viewBox="0 0 48 48" aria-hidden="true">
+        <circle cx="24" cy="24" r="18" fill="none" stroke="#F043B4" stroke-width="5"/>
+        <path d="M24 13.5V24l7.5 4.6" fill="none" stroke="#F043B4" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span class="nome" style="font-size:18px">Horaly</span>
+    </div>
+    <div class="fonte">
+      Projeto acadêmico do Startup ONE, FIAP, turma 2TMKOA, 2026. Os números desta página vêm de dez entrevistas feitas pelo grupo em setembro de 2026; a perda mensal é uma estimativa a partir desses relatos, não um dado de mercado auditado.
+    </div>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var $ = function(id){ return document.getElementById(id); };
+  var ZAP_NUMERO = "5511983554323";
+  var EMAIL = "horalyfiap@gmail.com";
+
+  // máscara de telefone
+  var zap = $('zap');
+  zap.addEventListener('input', function(){
+    var d = zap.value.replace(/\D/g,'').slice(0,11), v = d;
+    if(d.length > 2) v = '(' + d.slice(0,2) + ') ' + d.slice(2);
+    if(d.length > 6) v = '(' + d.slice(0,2) + ') ' + d.slice(2, d.length > 10 ? 7 : 6) + '-' + d.slice(d.length > 10 ? 7 : 6);
+    zap.value = v;
+  });
+
+  function erro(campo, mostrar){ $('e-' + campo).hidden = !mostrar; }
+  function digitos(t){ return t.replace(/\D/g,''); }
+
+  // banco: só existe para quem está logado no claude.ai
+  var bancoPromessa = (window.claude && claude.use) ? claude.use('db').catch(function(){ return null; })
+                                                    : Promise.resolve(null);  // site próprio: sempre os botões
+
+  function alternativas(dados){
+    var texto = 'Oi! Quero testar a Horaly.\n' +
+      'Nome: ' + dados.nome + '\nWhatsApp: ' + dados.zap +
+      '\nO que faço: ' + dados.prof + (dados.furos ? '\nFuros por semana: ' + dados.furos : '') +
+      (dados.obs ? '\nObs: ' + dados.obs : '');
+    $('btn-zap').href = ZAP_NUMERO ? 'https://wa.me/' + ZAP_NUMERO + '?text=' + encodeURIComponent(texto)
+                                   : 'https://wa.me/?text=' + encodeURIComponent(texto);
+    // mailto costuma ser bloqueado dentro do iframe; o Gmail na web abre em aba nova
+    $('btn-mail').href = 'https://mail.google.com/mail/?view=cm&fs=1&to=' + encodeURIComponent(EMAIL) +
+                         '&su=' + encodeURIComponent('Quero testar a Horaly') +
+                         '&body=' + encodeURIComponent(texto);
+    $('btn-copiar').onclick = async function(){
+      var completo = 'Para: ' + EMAIL + '\n\n' + texto;
+      try{
+        await navigator.clipboard.writeText(completo);
+      }catch(e){
+        var area = document.createElement('textarea');
+        area.value = completo; area.style.position = 'fixed'; area.style.opacity = '0';
+        document.body.appendChild(area); area.select();
+        try{ document.execCommand('copy'); }catch(err){}
+        document.body.removeChild(area);
+      }
+      $('btn-copiar').textContent = 'Copiado, é só colar';
+    };
+    $('alt').hidden = false;
+  }
+
+  $('form').addEventListener('submit', async function(ev){
+    ev.preventDefault();
+    var dados = {
+      nome: $('nome').value.trim(),
+      zap: $('zap').value.trim(),
+      prof: $('prof').value,
+      furos: $('furos').value,
+      obs: $('obs').value.trim()
+    };
+    var okNome = dados.nome.length >= 2;
+    var tel = digitos(dados.zap);
+    var okZap = tel.length === 10 || tel.length === 11;
+    var okProf = !!dados.prof;
+    erro('nome', !okNome); erro('zap', !okZap); erro('prof', !okProf);
+    if(!okNome){ $('nome').focus(); return; }
+    if(!okZap){ $('zap').focus(); return; }
+    if(!okProf){ $('prof').focus(); return; }
+
+    $('enviar').disabled = true;
+    $('status').textContent = 'Enviando...';
+
+    var db = await bancoPromessa;
+    var guardou = false;
+    if(db){
+      try{
+        var id = 'l' + Date.now() + Math.random().toString(36).slice(2,7);
+        await db.collection('leads').doc(id).set({
+          nome: dados.nome, zap: dados.zap, prof: dados.prof,
+          furos: dados.furos || '', obs: dados.obs || '',
+          origem: 'evento', criadoEm: new Date().toISOString()
+        });
+        guardou = true;
+      }catch(e){ guardou = false; }
+    }
+
+    $('enviar').disabled = false;
+    $('status').textContent = '';
+    $('form').hidden = true;
+    $('ok').hidden = false;
+
+    if(!guardou){
+      $('ok-t').textContent = 'Quase lá, ' + dados.nome.split(' ')[0] + '.';
+      $('ok-d').textContent = 'Toque em um dos botões abaixo para mandar seus dados para a gente. Leva dois segundos.';
+      alternativas(dados);
+    } else {
+      $('ok-t').textContent = 'Pronto, ' + dados.nome.split(' ')[0] + '. Você está na lista.';
+      $('ok-d').textContent = 'A gente chama no seu WhatsApp para combinar o teste.';
+    }
+    $('ok').scrollIntoView({behavior:'smooth', block:'center'});
+  });
+})();
+</script>
+</body>
+</html>
