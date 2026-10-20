@@ -1,0 +1,2481 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Protótipo Horaly</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Public+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+:root{
+  --ground:#EDE4F5;--panel:#FFFFFF;--panel-2:#F9F4FD;
+  --ink:#1A0F26;--ink-2:#4B3A5C;--ink-3:#7E6B91;
+  --line:#EBDFF5;--line-2:#D9C7E8;
+  --accent:#7E22CE;--on-accent:#FFFFFF;--accent-soft:#F4E8FF;--accent-dim:#C9A7EC;
+  --shell:#1B0F27;
+  --ok:#157F5B;--ok-soft:#DEF3EB;
+  --warn:#95590C;--warn-soft:#FBEEDA;
+  --alert:#BC1B51;--alert-soft:#FCE6EE;
+  --wa:#ECE4F3;
+  --shadow:0 24px 60px -30px rgba(40,12,64,.55);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ground:#0D0714;--panel:#1A1124;--panel-2:#231834;--ink:#F3EAFB;--ink-2:#C6B3DA;--ink-3:#9281A8;
+    --line:#2E2240;--line-2:#3E2E53;--accent:#CB8BFF;--on-accent:#1A0B26;--accent-soft:#33204A;--accent-dim:#6E4C93;
+    --shell:#000000;--ok:#5FD0A4;--ok-soft:#142D26;--warn:#E3A84C;--warn-soft:#2E2415;
+    --alert:#F27DA4;--alert-soft:#38172B;--wa:#150E20;--shadow:0 24px 60px -30px rgba(0,0,0,.9);
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#0D0714;--panel:#1A1124;--panel-2:#231834;--ink:#F3EAFB;--ink-2:#C6B3DA;--ink-3:#9281A8;
+  --line:#2E2240;--line-2:#3E2E53;--accent:#CB8BFF;--on-accent:#1A0B26;--accent-soft:#33204A;--accent-dim:#6E4C93;
+  --shell:#000000;--ok:#5FD0A4;--ok-soft:#142D26;--warn:#E3A84C;--warn-soft:#2E2415;
+  --alert:#F27DA4;--alert-soft:#38172B;--wa:#150E20;--shadow:0 24px 60px -30px rgba(0,0,0,.9);
+}
+
+*{box-sizing:border-box}
+body, .login, .lead, .done{overflow-wrap:break-word}
+body{
+  background:var(--ground);color:var(--ink);
+  font-family:"Public Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  line-height:1.5;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px 16px;
+}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer;text-align:left}
+input{font:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+
+.device{width:100%;max-width:392px;background:var(--shell);border-radius:38px;padding:10px;box-shadow:var(--shadow)}
+.viewport{
+  background:var(--panel);border-radius:29px;overflow:hidden;
+  height:min(780px, calc(100vh - 68px));min-height:620px;display:flex;flex-direction:column;
+}
+@media (max-width:430px){
+  body{padding:0}
+  .device{max-width:none;border-radius:0;padding:0;height:100vh}
+  .viewport{border-radius:0;height:100vh;min-height:0}
+}
+
+.status{
+  display:flex;justify-content:space-between;align-items:center;flex:none;padding:12px 22px 6px;
+  font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--ink-3);font-variant-numeric:tabular-nums;
+}
+.topbar{flex:none;background:var(--accent);color:var(--on-accent);padding:12px 18px 14px;display:flex;align-items:center;gap:11px}
+.topbar[hidden]{display:none}
+.mark{
+  width:32px;height:32px;border-radius:10px;background:rgba(255,255,255,.24);flex:none;display:grid;place-items:center;
+  font-family:"Bricolage Grotesque",sans-serif;font-weight:800;font-size:12px;
+}
+.brand{font-family:"Bricolage Grotesque",sans-serif;font-weight:700;font-size:15px;line-height:1.15}
+.brand-s{font-size:11px;opacity:.85;line-height:1.3}
+.topact{margin-left:auto;font-size:12.5px;font-weight:600;opacity:.92;padding:4px 2px}
+
+.stack{flex:1;display:flex;flex-direction:column;min-height:0}
+.view{flex:1;overflow-y:auto;display:none;flex-direction:column}
+.view.on{display:flex}
+
+.hd{display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:16px 18px 6px}
+.hd h2{font-family:"Bricolage Grotesque",sans-serif;font-weight:700;font-size:19px;margin:0;letter-spacing:-.01em}
+.hd .count{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--ink-3)}
+.seclabel{padding:18px 18px 6px;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3)}
+
+/* ===== LOGIN ===== */
+.login{flex:1;display:flex;flex-direction:column;padding:clamp(22px,6vw,34px) clamp(18px,5.5vw,26px) 24px;gap:0;background:var(--panel)}
+.logo{
+  width:52px;height:52px;border-radius:15px;background:var(--accent);color:var(--on-accent);
+  display:grid;place-items:center;font-family:"Bricolage Grotesque",sans-serif;font-weight:800;font-size:19px;
+}
+.login h1{font-family:"Bricolage Grotesque",sans-serif;font-weight:800;font-size:clamp(22px,6.2vw,27px);margin:clamp(16px,4vw,22px) 0 7px;letter-spacing:-.02em;line-height:1.15;text-wrap:balance}
+.login .tag{font-size:14px;color:var(--ink-2);margin:0 0 clamp(18px,5vw,26px);max-width:36ch;text-wrap:pretty}
+.field{display:flex;flex-direction:column;gap:6px;margin-bottom:13px}
+.field label{font-size:11.5px;font-weight:600;color:var(--ink-3);letter-spacing:.04em;text-transform:uppercase}
+.field input{
+  border:1.5px solid var(--line-2);background:var(--panel-2);color:var(--ink);
+  border-radius:9px;padding:12px 13px;font-size:15px;width:100%;
+}
+.field input::placeholder{color:var(--ink-3)}
+.madeby{
+  margin:26px 0 0;text-align:center;font-size:11px;color:var(--ink-3);letter-spacing:.04em;
+  padding-top:16px;border-top:1px solid var(--line);
+}
+.voltar{font-size:13px;font-weight:600;color:var(--ink-3);padding:2px 0;align-self:flex-start;margin-bottom:14px}
+.erro{margin:-4px 0 4px;font-size:12.5px;color:var(--alert);font-weight:600}
+.erro[hidden]{display:none}
+.forgot{font-size:12.5px;color:var(--accent);font-weight:600;padding:2px 0;align-self:flex-start;margin-bottom:18px}
+.divider{display:flex;align-items:center;gap:12px;margin:22px 0 14px;color:var(--ink-3);font-size:11px;letter-spacing:.08em;text-transform:uppercase}
+.divider::before,.divider::after{content:"";height:1px;background:var(--line);flex:1}
+.who{display:flex;flex-direction:column;gap:9px}
+.whobtn{
+  border:1.5px solid var(--line-2);border-radius:11px;padding:12px 13px;display:flex;align-items:center;gap:12px;width:100%;
+  transition:border-color .15s ease;
+}
+.whobtn:hover{border-color:var(--accent)}
+.whoav{
+  width:36px;height:36px;border-radius:50%;background:var(--accent-soft);color:var(--accent);flex:none;
+  display:grid;place-items:center;font-weight:700;font-size:13px;
+}
+.whon{display:block;font-size:14px;font-weight:600;line-height:1.25}
+.whor{display:block;font-size:11.5px;color:var(--ink-3);line-height:1.3}
+.whoarrow{margin-left:auto;color:var(--ink-3);font-size:17px;flex:none}
+
+/* ===== agenda / listas ===== */
+.rows{display:flex;flex-direction:column;padding:0 18px}
+.row{display:flex;gap:12px;padding:13px 0;border-bottom:1px solid var(--line);align-items:flex-start;width:100%}
+.row:last-child{border-bottom:none}
+.t{font-family:"IBM Plex Mono",monospace;font-size:12.5px;color:var(--ink-3);width:42px;flex:none;padding-top:2px;font-variant-numeric:tabular-nums}
+.rmain{flex:1;min-width:0}
+.rname{font-size:14.5px;font-weight:600;line-height:1.3}
+.rmeta{font-size:11.5px;color:var(--ink-3);line-height:1.4;margin-top:2px}
+.tag{flex:none;font-size:10px;font-weight:700;letter-spacing:.03em;padding:3px 8px;border-radius:99px;text-transform:uppercase;white-space:nowrap;margin-top:2px}
+.tag.ok{background:var(--ok-soft);color:var(--ok)}
+.tag.warn{background:var(--warn-soft);color:var(--warn)}
+.tag.alert{background:var(--alert-soft);color:var(--alert)}
+
+.open{
+  border:1px dashed var(--alert);background:var(--alert-soft);border-radius:10px;padding:13px 14px;margin:12px 18px;
+  display:flex;gap:12px;align-items:center;width:calc(100% - 36px);transition:transform .15s ease;
+}
+.open:active{transform:scale(.985)}
+.open .t{color:var(--alert);padding-top:0}
+.open .rname{color:var(--alert)}
+.chev{color:var(--alert);font-size:18px;flex:none;line-height:1}
+
+.footer-bar{
+  flex:none;border-top:1px solid var(--line);background:var(--accent-soft);padding:14px 18px;
+  display:flex;justify-content:space-between;align-items:flex-end;gap:12px;
+}
+.fl{font-size:11px;color:var(--ink-2);letter-spacing:.02em;line-height:1.3}
+.fv{font-family:"Bricolage Grotesque",sans-serif;font-weight:800;font-size:23px;color:var(--accent);font-variant-numeric:tabular-nums;line-height:1.1}
+
+/* ===== vaga ===== */
+.lead{padding:18px 18px 4px}
+.lead .k{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--alert);font-weight:600}
+.lead h3{font-family:"Bricolage Grotesque",sans-serif;font-weight:700;font-size:22px;margin:6px 0 4px;letter-spacing:-.015em}
+.lead p{margin:0;font-size:13.5px;color:var(--ink-2)}
+.cand{display:flex;gap:12px;align-items:center;padding:12px 18px;border-bottom:1px solid var(--line);width:100%}
+.cand[aria-pressed="true"]{background:var(--accent-soft)}
+.box{width:21px;height:21px;border-radius:6px;border:1.5px solid var(--line-2);flex:none;display:grid;place-items:center;font-size:12px;color:transparent}
+.cand[aria-pressed="true"] .box{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.cand > span:nth-child(2){display:block;min-width:0}
+.cn{display:block;font-size:14px;font-weight:600;line-height:1.25}
+.cw{display:block;font-size:11.5px;color:var(--ink-3);line-height:1.35;margin-top:1px}
+.pct{margin-left:auto;flex:none;font-family:"IBM Plex Mono",monospace;font-size:12px;font-weight:600;color:var(--ok);font-variant-numeric:tabular-nums}
+
+.actions{padding:18px;display:flex;flex-direction:column;gap:9px;margin-top:auto}
+.cta{background:var(--accent);color:var(--on-accent);border-radius:10px;padding:14px;text-align:center;font-weight:700;font-size:15px;transition:opacity .15s ease}
+.cta:active{opacity:.85}
+.cta.ghost{background:transparent;color:var(--accent);border:1.5px solid var(--line-2);font-weight:600}
+.cta[disabled]{opacity:.4;cursor:default}
+
+/* ===== enviando / done ===== */
+.sending{padding:26px 18px;display:flex;flex-direction:column;gap:16px;flex:1}
+.pulse{width:56px;height:56px;border-radius:50%;background:var(--accent-soft);display:grid;place-items:center;color:var(--accent);font-size:22px;margin:6px auto 0}
+@media (prefers-reduced-motion: no-preference){
+  .pulse{animation:beat 1.4s ease-in-out infinite}
+  @keyframes beat{0%,100%{transform:scale(1)}50%{transform:scale(1.09)}}
+}
+.sending h3{font-family:"Bricolage Grotesque",sans-serif;font-size:18px;margin:0;text-align:center;font-weight:700}
+.sending .sub{text-align:center;font-size:13px;color:var(--ink-2);margin:-8px 0 0}
+.log{display:flex;flex-direction:column;border-top:1px solid var(--line);margin-top:6px}
+.logline{display:flex;gap:10px;align-items:center;padding:11px 2px;border-bottom:1px solid var(--line);font-size:13px;opacity:0;transform:translateY(4px)}
+.logline.in{opacity:1;transform:none;transition:opacity .35s ease, transform .35s ease}
+@media (prefers-reduced-motion: reduce){.logline{transition:none}}
+.tick{width:18px;flex:none;text-align:center;font-size:12px;color:var(--ok)}
+.logtime{margin-left:auto;font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--ink-3);flex:none}
+
+.done{padding:30px 20px 18px;display:flex;flex-direction:column;gap:14px;align-items:center;text-align:center}
+.seal{width:64px;height:64px;border-radius:50%;background:var(--ok-soft);color:var(--ok);display:grid;place-items:center;font-size:28px}
+.done h3{font-family:"Bricolage Grotesque",sans-serif;font-weight:800;font-size:23px;margin:0;letter-spacing:-.015em}
+.done p{margin:0;font-size:14px;color:var(--ink-2);max-width:30ch}
+.receipt{width:100%;background:var(--panel-2);border:1px solid var(--line);border-radius:10px;margin-top:6px;display:flex;flex-direction:column}
+.rline{display:flex;justify-content:space-between;gap:12px;padding:11px 14px;border-bottom:1px solid var(--line);font-size:13px}
+.rline:last-child{border-bottom:none}
+.rline .rk{color:var(--ink-3)}
+.rline .rv{font-weight:600;font-variant-numeric:tabular-nums}
+.rline.total .rv{color:var(--accent);font-weight:800;font-family:"Bricolage Grotesque",sans-serif;font-size:16px}
+
+/* ===== whatsapp ===== */
+.wa{background:var(--wa);flex:1;padding:16px 14px;display:flex;flex-direction:column;gap:10px}
+.wahead{flex:none;background:var(--accent);color:var(--on-accent);padding:10px 16px;display:flex;align-items:center;gap:10px}
+.bub{background:var(--panel);border-radius:4px 14px 14px 14px;padding:12px 13px;font-size:13.5px;display:flex;flex-direction:column;gap:9px;box-shadow:0 1px 2px rgba(0,0,0,.1);max-width:88%}
+.bub.me{align-self:flex-end;background:var(--accent-soft);border-radius:14px 4px 14px 14px}
+.bub p{margin:0}
+.wbtn{text-align:center;font-size:12.5px;font-weight:600;padding:8px;border-radius:7px;border:1px solid var(--line-2);color:var(--accent)}
+.wbtn.p{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
+.wstamp{font-size:10.5px;color:var(--ink-3);align-self:flex-end;font-family:"IBM Plex Mono",monospace}
+.lgpd{font-size:10.5px;color:var(--ink-3);line-height:1.4;background:var(--panel);border-radius:8px;padding:8px 10px}
+
+/* ===== ganhos / graficos ===== */
+.hero{padding:20px 18px 4px}
+.hero .hl{font-size:11.5px;color:var(--ink-3);letter-spacing:.04em;text-transform:uppercase;font-weight:600}
+.hero .hv{font-family:"Bricolage Grotesque",sans-serif;font-weight:800;font-size:38px;color:var(--accent);line-height:1.05;letter-spacing:-.02em;font-variant-numeric:tabular-nums;margin-top:4px}
+.hero .hs{font-size:13px;color:var(--ink-2);margin-top:5px}
+
+.chart{padding:6px 18px 4px;display:flex;flex-direction:column;gap:9px}
+.barrow{display:flex;align-items:center;gap:10px}
+.blab{width:52px;flex:none;font-size:11.5px;color:var(--ink-3);font-family:"IBM Plex Mono",monospace}
+.btrack{flex:1;height:16px;background:var(--panel-2);border-radius:4px;overflow:hidden;min-width:0}
+.bfill{display:block;height:100%;background:var(--accent);border-radius:4px}
+.bfill.dim{background:var(--accent-dim)}
+.bval{width:52px;flex:none;text-align:right;font-size:11.5px;font-weight:600;font-variant-numeric:tabular-nums;color:var(--ink-2)}
+.caption{padding:4px 18px 0;font-size:11.5px;color:var(--ink-3)}
+
+/* ===== tiles ===== */
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin-top:10px}
+.tile{background:var(--panel);padding:14px 16px;display:flex;flex-direction:column;gap:3px}
+.tile .tl{font-size:11px;color:var(--ink-3);letter-spacing:.03em;line-height:1.3}
+.tile .tv{font-family:"Bricolage Grotesque",sans-serif;font-weight:800;font-size:22px;line-height:1.1;font-variant-numeric:tabular-nums}
+.tile .td{font-size:11px;display:flex;align-items:center;gap:4px;font-weight:600}
+.td.up{color:var(--ok)}
+.td.down{color:var(--alert)}
+.td.flat{color:var(--ink-3)}
+
+/* ===== alertas ===== */
+.alertitem{display:flex;gap:11px;padding:13px 18px;border-bottom:1px solid var(--line);align-items:flex-start;width:100%}
+.sev{width:22px;height:22px;border-radius:6px;flex:none;display:grid;place-items:center;font-size:11px;font-weight:700;margin-top:1px}
+.sev.crit{background:var(--alert-soft);color:var(--alert)}
+.sev.warn{background:var(--warn-soft);color:var(--warn)}
+.sev.info{background:var(--accent-soft);color:var(--accent)}
+.al-t{display:block;font-size:14px;font-weight:600;line-height:1.3}
+.al-d{display:block;font-size:11.5px;color:var(--ink-3);line-height:1.4;margin-top:2px}
+.al-w{font-family:"IBM Plex Mono",monospace;font-size:10.5px;color:var(--ink-3);flex:none;margin-top:2px}
+
+/* ===== unidade ===== */
+.unit{display:flex;gap:12px;align-items:center;padding:13px 18px;border-bottom:1px solid var(--line);width:100%}
+.un{font-size:14px;font-weight:600;line-height:1.25;display:block}
+.ud{font-size:11.5px;color:var(--ink-3);line-height:1.35;display:block;margin-top:1px}
+.uocc{margin-left:auto;flex:none;text-align:right}
+.uv{font-family:"IBM Plex Mono",monospace;font-size:13px;font-weight:600;font-variant-numeric:tabular-nums;display:block}
+.us{font-size:10px;color:var(--ink-3);display:block}
+
+/* ===== v2: score explicavel, modo de envio, revisao, fila ===== */
+.fonte{display:block;font-size:10.5px;color:var(--ink-3);line-height:1.35;margin-top:3px;font-style:italic}
+.modo{padding:16px 18px 4px;display:flex;flex-direction:column;gap:9px}
+.modo-l{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3)}
+.modo-h{margin:0;font-size:11.5px;color:var(--ink-2);line-height:1.45}
+.modo-h.risco{color:var(--alert)}
+
+.previa{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--panel-2)}
+.previa-h{padding:9px 12px;font-size:11px;color:var(--ink-3);border-bottom:1px solid var(--line);line-height:1.4}
+.previa-h strong{color:var(--ink-2)}
+.previa-b{padding:13px 13px;display:flex;flex-direction:column;gap:8px;font-size:13.5px;background:var(--panel)}
+.previa-b p{margin:0}
+.editar{margin-top:11px;font-size:12.5px;font-weight:600;color:var(--accent);padding:2px 0}
+
+.passos{display:flex;flex-direction:column;padding:0 18px}
+.passo{display:flex;gap:11px;padding:10px 0;border-bottom:1px solid var(--line);align-items:flex-start}
+.passo:last-child{border-bottom:none}
+.num{width:20px;height:20px;border-radius:50%;background:var(--accent-soft);color:var(--accent);flex:none;
+  display:grid;place-items:center;font-size:10.5px;font-weight:700;margin-top:1px}
+.passo-t{font-size:13px;line-height:1.4}
+.passo-t b{font-weight:600}
+
+.captura{display:flex;gap:11px;align-items:center;padding:12px 18px;width:100%;border-bottom:1px solid var(--line);
+  background:var(--warn-soft)}
+.cap-b{flex:1;min-width:0}
+.cap-t{display:block;font-size:13.5px;font-weight:600;line-height:1.3}
+.cap-d{display:block;font-size:11px;color:var(--ink-3);line-height:1.35;margin-top:2px}
+.cap-a{flex:none;background:var(--accent);color:var(--on-accent);border-radius:7px;padding:7px 11px;
+  font-size:12px;font-weight:700;white-space:nowrap}
+
+/* ===== medicao de tempo, permissoes e servicos ===== */
+.medir{display:flex;gap:11px;align-items:center;padding:12px 14px;margin:12px 18px;width:calc(100% - 36px);
+  background:var(--warn-soft);border:1px solid var(--line);border-radius:10px}
+.med-i{width:26px;height:26px;border-radius:50%;background:var(--panel);color:var(--warn);flex:none;
+  display:grid;place-items:center;font-size:13px}
+.med-b{flex:1;min-width:0}
+.med-t{display:block;font-size:13.5px;font-weight:600;line-height:1.3}
+.med-d{display:block;font-size:11.5px;color:var(--ink-2);line-height:1.4;margin-top:2px}
+.med-a{flex:none;background:var(--accent);color:var(--on-accent);border-radius:7px;padding:7px 11px;
+  font-size:12px;font-weight:700;white-space:nowrap}
+
+.perms{display:flex;flex-direction:column;padding:0 18px}
+.perm{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--line)}
+.perm:last-child{border-bottom:none}
+.perm-t{flex:1;font-size:13.5px}
+.chip{flex:none;font-size:11px;font-weight:700;padding:4px 11px;border-radius:99px;letter-spacing:.02em}
+.chip.on{background:var(--ok-soft);color:var(--ok)}
+.chip.off{background:var(--panel-2);color:var(--ink-3);border:1px solid var(--line-2)}
+
+.servs{display:flex;flex-wrap:wrap;gap:8px;padding:0 18px}
+.serv{border:1.5px solid var(--line-2);border-radius:9px;padding:9px 12px;display:flex;flex-direction:column;gap:1px;
+  background:var(--panel)}
+.serv.on{border-color:var(--accent);background:var(--accent-soft)}
+.serv-n{font-size:12.5px;font-weight:600;line-height:1.2}
+.serv-t{font-size:10.5px;color:var(--ink-3);line-height:1.3}
+.serv.on .serv-t{color:var(--accent)}
+
+/* ===== importacao de clientes ===== */
+.origens{display:flex;flex-direction:column;gap:9px;padding:14px 18px 4px}
+.origem{display:flex;gap:12px;align-items:center;border:1.5px solid var(--line-2);border-radius:11px;padding:12px 13px;width:100%}
+.origem.on{border-color:var(--accent);background:var(--accent-soft)}
+.or-i{width:34px;height:34px;border-radius:9px;background:var(--panel-2);color:var(--ink-2);flex:none;
+  display:grid;place-items:center;font-size:15px}
+.origem.on .or-i{background:var(--accent);color:var(--on-accent)}
+.or-b{flex:1;min-width:0}
+.or-t{display:block;font-size:14px;font-weight:600;line-height:1.25}
+.or-d{display:block;font-size:11.5px;color:var(--ink-3);line-height:1.4;margin-top:2px}
+.origem.on .or-d{color:var(--ink-2)}
+.or-c{flex:none;color:var(--ink-3);font-size:17px}
+
+.cli{display:flex;gap:12px;align-items:center;padding:11px 18px;border-bottom:1px solid var(--line);width:100%}
+.cli[aria-pressed="true"]{background:var(--accent-soft)}
+.cli .box{width:21px;height:21px;border-radius:6px;border:1.5px solid var(--line-2);flex:none;
+  display:grid;place-items:center;font-size:12px;color:transparent}
+.cli[aria-pressed="true"] .box{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.cli > span:nth-child(2){display:block;min-width:0}
+
+.erro-campo{display:block;font-size:11.5px;color:var(--alert);font-weight:600;margin-top:-1px}
+.erro-campo[hidden]{display:none}
+.field.invalido input{border-color:var(--alert)}
+.aviso{display:flex;gap:11px;align-items:center;margin:14px 18px 0;padding:11px 13px;border-radius:10px;
+  background:var(--ok-soft);border:1px solid var(--line)}
+.aviso[hidden]{display:none}
+.av-i{width:24px;height:24px;border-radius:50%;background:var(--ok);color:var(--panel);flex:none;
+  display:grid;place-items:center;font-size:12px;font-weight:700}
+.av-b{flex:1;min-width:0}
+.av-t{display:block;font-size:13.5px;font-weight:600;line-height:1.3}
+.av-d{display:block;font-size:11.5px;color:var(--ink-2);line-height:1.4;margin-top:1px}
+.av-a{flex:none;font-size:12px;font-weight:700;color:var(--accent);padding:4px 2px}
+.arquivo{display:flex;gap:12px;align-items:center;border:1.5px dashed var(--line-2);border-radius:11px;
+  padding:15px 14px;width:100%;background:var(--panel-2)}
+.arquivo.cheio{border-style:solid;border-color:var(--accent);background:var(--accent-soft)}
+.arq-i{width:34px;height:34px;border-radius:9px;background:var(--panel);color:var(--ink-3);flex:none;
+  display:grid;place-items:center;font-size:15px}
+.arquivo.cheio .arq-i{background:var(--accent);color:var(--on-accent)}
+.arq-b{flex:1;min-width:0}
+.arq-t{display:block;font-size:14px;font-weight:600;line-height:1.25}
+.arq-d{display:block;font-size:11.5px;color:var(--ink-3);line-height:1.35;margin-top:2px}
+
+/* ===== formulario / cadastro ===== */
+.form{padding:14px 18px 4px;display:flex;flex-direction:column}
+.form .field{margin-bottom:14px}
+.duo{display:flex;gap:10px}
+.duo .field{flex:1}
+.duo .field.uf{flex:0 0 92px}
+.hint{font-size:11.5px;color:var(--ink-3);margin:-6px 0 14px;line-height:1.4}
+.seg{display:flex;border:1.5px solid var(--line-2);border-radius:9px;overflow:hidden}
+.segbtn{flex:1;padding:10px 6px;text-align:center;font-size:12.5px;font-weight:600;color:var(--ink-3);border-right:1px solid var(--line-2)}
+.segbtn:last-child{border-right:none}
+.segbtn[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent)}
+.addbtn{
+  margin-left:auto;flex:none;background:var(--accent-soft);color:var(--accent);border-radius:8px;
+  padding:6px 11px;font-size:12.5px;font-weight:700;
+}
+
+/* equipe */
+.memb{display:flex;gap:11px;align-items:center;padding:11px 18px;border-bottom:1px solid var(--line);width:100%}
+.mav{width:32px;height:32px;border-radius:50%;background:var(--panel-2);color:var(--ink-2);flex:none;display:grid;place-items:center;font-size:12px;font-weight:700;border:1px solid var(--line)}
+.mn{display:block;font-size:14px;font-weight:600;line-height:1.25}
+.mm{display:block;font-size:11.5px;color:var(--ink-3);line-height:1.35;margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.role{
+  margin-left:auto;flex:none;border:1px solid var(--line-2);border-radius:99px;padding:4px 10px;
+  font-size:11px;font-weight:700;color:var(--ink-2);white-space:nowrap;
+}
+.role[data-r="Gestor"]{background:var(--accent-soft);color:var(--accent);border-color:transparent}
+.role[data-r="Recepção"]{background:var(--warn-soft);color:var(--warn);border-color:transparent}
+.statusdot{margin-left:auto;flex:none;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.03em}
+.statusdot.pend{color:var(--warn)}
+.statusdot.act{color:var(--ok)}
+.paste{
+  width:100%;border:1.5px dashed var(--line-2);background:var(--panel-2);border-radius:10px;padding:13px;
+  font-size:13px;color:var(--ink);min-height:96px;font-family:"IBM Plex Mono",monospace;line-height:1.6;resize:none;
+}
+.paste::placeholder{color:var(--ink-3)}
+.linkbox{
+  display:flex;align-items:center;gap:10px;border:1.5px solid var(--line-2);border-radius:10px;padding:11px 13px;
+  background:var(--panel-2);font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--ink-2);
+}
+.linkbox span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+.copy{flex:none;color:var(--accent);font-weight:700;font-size:12px;font-family:"Public Sans",sans-serif}
+
+/* ===== tabbar ===== */
+.tabbar{flex:none;display:flex;border-top:1px solid var(--line);background:var(--panel)}
+.tabbar[hidden]{display:none}
+.tab{flex:1;padding:11px 4px 13px;display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--ink-3)}
+.tab .ti{font-size:16px;line-height:1}
+.tab .tt{font-size:10.5px;font-weight:600;letter-spacing:.02em}
+.tab[aria-selected="true"]{color:var(--accent)}
+</style>
+
+<style>
+body{flex-direction:column;gap:14px}
+.login p.tag{text-transform:none;letter-spacing:0;font-weight:400;font-size:14px;padding:0;margin-top:0;white-space:normal;border-radius:0;background:none}
+.sitebar{width:100%;max-width:392px;display:flex;justify-content:space-between;align-items:center;gap:12px;font-family:"Public Sans",sans-serif;font-size:13px;font-weight:600}
+.sitebar a{color:var(--ink-2);text-decoration:none;padding:6px 2px}
+.sitebar a.quero{background:var(--accent);color:var(--on-accent);border-radius:99px;padding:7px 14px}
+@media (max-width:430px){
+  body{gap:0}
+  .sitebar{max-width:none;padding:8px 14px;height:46px;background:var(--panel);border-bottom:1px solid var(--line)}
+  .device,.viewport{height:calc(100vh - 46px);height:calc(100dvh - 46px)}
+}
+</style>
+<nav class="sitebar" aria-label="Site da Horaly">
+  <a href="../index.html">‹ Voltar ao site</a>
+  <a class="quero" href="../index.html#contato">Quero testar</a>
+</nav>
+<div class="device">
+  <div class="viewport">
+    <div class="status"><span id="clock">09:41</span><span>4G ▮▮▮</span></div>
+
+    <div class="topbar" id="topbar" hidden>
+      <div class="mark" id="tb-mark">SM</div>
+      <div>
+        <div class="brand" id="tb-brand">Studio Marli</div>
+        <div class="brand-s" id="tb-sub">agenda de hoje</div>
+      </div>
+      <button class="topact" id="tb-act">Sair</button>
+    </div>
+
+    <div class="stack">
+
+      <!-- ================= LOGIN ================= -->
+      <section class="view on" id="v-login">
+        <div class="login">
+          <div class="logo">H</div>
+          <h1>Sua agenda trabalhando por você</h1>
+          <p class="tag">Veja os horários de hoje e as vagas que dá para recuperar.</p>
+
+          <div class="field">
+            <label for="mail">E-mail</label>
+            <input id="mail" type="email" placeholder="voce@seunegocio.com.br" autocomplete="off">
+          </div>
+          <div class="field">
+            <label for="pass">Senha</label>
+            <input id="pass" type="password" placeholder="••••••••" autocomplete="off">
+          </div>
+          <button class="forgot">Esqueci minha senha</button>
+          <button class="cta" id="entrar">Entrar</button>
+
+          <div class="divider">contas de demonstração</div>
+          <div class="who">
+            <button class="whobtn" data-perfil="pro">
+              <span class="whoav">M</span>
+              <span>
+                <span class="whon">Marli Souza</span>
+                <span class="whor">Studio Marli · profissional autônoma</span>
+              </span>
+              <span class="whoarrow">›</span>
+            </button>
+            <button class="whobtn" data-perfil="rede">
+              <span class="whoav">MF</span>
+              <span>
+                <span class="whon">Marcelo Figueiredo</span>
+                <span class="whor">Rede Bellavita · gestor de 12 unidades</span>
+              </span>
+              <span class="whoarrow">›</span>
+            </button>
+            <button class="whobtn" data-perfil="duplo">
+              <span class="whoav">RC</span>
+              <span>
+                <span class="whon">Rafael Costa</span>
+                <span class="whor">Barbearia Costa · atende e gerencia</span>
+              </span>
+              <span class="whoarrow">›</span>
+            </button>
+          </div>
+          <p class="hint" style="margin-top:12px">O login é o mesmo para todo mundo. O que muda é o vínculo de cada conta com o estabelecimento.</p>
+
+          <p class="madeby">Horaly · agenda inteligente</p>
+        </div>
+      </section>
+
+      <!-- ================= RECUPERAR SENHA ================= -->
+      <section class="view" id="v-recuperar">
+        <div class="login">
+          <button class="voltar" data-back="login">‹ Voltar</button>
+          <h1>Esqueceu a senha?</h1>
+          <p class="tag">Diga o e-mail que você usa para entrar e mandamos um link para criar uma nova.</p>
+          <div class="field">
+            <label for="r-mail">E-mail</label>
+            <input id="r-mail" type="email" placeholder="voce@seunegocio.com.br" autocomplete="off">
+          </div>
+          <p class="erro" id="r-erro" hidden>Digite um e-mail válido para continuar.</p>
+          <div style="margin-top:8px"><button class="cta" id="enviarlink">Enviar link</button></div>
+          <p class="madeby">Horaly · agenda inteligente</p>
+        </div>
+      </section>
+
+      <!-- ================= LINK ENVIADO ================= -->
+      <section class="view" id="v-enviado">
+        <div class="done" style="padding-top:44px">
+          <div class="seal" style="background:var(--accent-soft);color:var(--accent)">✉</div>
+          <h3>Verifique seu e-mail</h3>
+          <p>Enviamos um link de recuperação para <strong id="e-dest">voce@seunegocio.com.br</strong>. Ele vale por 30 minutos.</p>
+        </div>
+        <div class="form" style="padding-top:18px">
+          <p class="hint" style="margin:0">Não chegou? Olhe no spam ou peça de novo.</p>
+        </div>
+        <div class="actions">
+          <button class="cta" data-goto="novasenha">Abrir o link</button>
+          <button class="cta ghost" id="reenviar">Enviar de novo</button>
+          <button class="cta ghost" data-back="login">Voltar para o login</button>
+        </div>
+      </section>
+
+      <!-- ================= NOVA SENHA ================= -->
+      <section class="view" id="v-novasenha">
+        <div class="login">
+          <h1>Criar nova senha</h1>
+          <p class="tag">Escolha uma senha que você lembre. Ela vale para todos os seus dispositivos.</p>
+          <div class="field">
+            <label for="n1">Nova senha</label>
+            <input id="n1" type="password" placeholder="pelo menos 8 caracteres" autocomplete="off">
+          </div>
+          <div class="field">
+            <label for="n2">Repita a nova senha</label>
+            <input id="n2" type="password" placeholder="digite de novo" autocomplete="off">
+          </div>
+          <p class="erro" id="n-erro" hidden>As senhas precisam ser iguais e ter 8 caracteres ou mais.</p>
+          <div style="margin-top:8px"><button class="cta" id="salvarsenha">Salvar e entrar</button></div>
+        </div>
+      </section>
+
+      <!-- ================= SENHA ALTERADA ================= -->
+      <section class="view" id="v-senhaok">
+        <div class="done" style="padding-top:52px">
+          <div class="seal">✓</div>
+          <h3>Senha alterada</h3>
+          <p>Tudo certo. Você já pode entrar com a senha nova.</p>
+        </div>
+        <div class="actions"><button class="cta" data-back="login">Ir para o login</button></div>
+      </section>
+
+      <!-- ================= ESCOLHA DE ACESSO ================= -->
+      <section class="view" id="v-contexto">
+        <div class="login" style="padding-top:30px">
+          <div class="logo">H</div>
+          <h1>Onde você quer entrar?</h1>
+          <p class="tag">Você tem dois acessos na Barbearia Costa. Dá para trocar quando quiser.</p>
+          <div class="who">
+            <button class="whobtn" data-entrar="barbeiro">
+              <span class="whoav">✂</span>
+              <span>
+                <span class="whon">Minha agenda</span>
+                <span class="whor">como barbeiro · seus clientes e seus horários</span>
+              </span>
+              <span class="whoarrow">›</span>
+            </button>
+            <button class="whobtn" data-entrar="gestao">
+              <span class="whoav">▦</span>
+              <span>
+                <span class="whon">Gestão da barbearia</span>
+                <span class="whor">como dono · equipe, ocupação e alertas</span>
+              </span>
+              <span class="whoarrow">›</span>
+            </button>
+          </div>
+          <p class="hint" style="margin-top:16px">Quem tem um vínculo só não vê esta tela: entra direto no que interessa.</p>
+          <p class="madeby">Horaly · agenda inteligente</p>
+        </div>
+      </section>
+
+      <!-- ================= PROFISSIONAL · HOJE ================= -->
+      <section class="view" id="v-agenda">
+        <div class="hd">
+          <h2>Hoje, sábado</h2>
+          <span class="count" id="cnt">7 atendimentos</span>
+        </div>
+        <div class="rows">
+          <div class="row">
+            <div class="t">09:00</div>
+            <div class="rmain">
+              <div class="rname">Carla Nunes</div>
+              <div class="rmeta">esmaltação em gel · costuma levar 1h10</div>
+            </div>
+            <span class="tag ok">agora</span>
+          </div>
+        </div>
+
+        <button class="medir" id="medir">
+          <span class="med-i">⏱</span>
+          <span class="med-b">
+            <span class="med-t">A Carla saiu às 10:08</span>
+            <span class="med-d">O gel dela levou <b>1h08</b>, e você tinha marcado 45 min. Confirma para eu aprender?</span>
+          </span>
+          <span class="med-a" id="med-a">Confirmar</span>
+        </button>
+
+        <button class="open" id="openslot">
+          <div class="t">11:00</div>
+          <div class="rmain">
+            <div class="rname">Vaga aberta</div>
+            <div class="rmeta">cancelou há 20 min · R$ 85 em risco</div>
+          </div>
+          <span class="chev">›</span>
+        </button>
+
+        <div class="rows">
+          <div class="row">
+            <div class="t">13:30</div>
+            <div class="rmain">
+              <div class="rname">Patrícia Alves</div>
+              <div class="rmeta">faltou 2 das últimas 5 vezes · não confirmou</div>
+            </div>
+            <span class="tag warn">risco</span>
+          </div>
+          <div class="row">
+            <div class="t">15:00</div>
+            <div class="rmain">
+              <div class="rname">Dona Neide</div>
+              <div class="rmeta">pé e mão · sempre pontual</div>
+            </div>
+            <span class="tag ok">confirmado</span>
+          </div>
+          <div class="row">
+            <div class="t">16:40</div>
+            <div class="rmain">
+              <div class="rname">Letícia Moraes</div>
+              <div class="rmeta">alongamento · primeira vez</div>
+            </div>
+            <span class="tag ok">confirmado</span>
+          </div>
+        </div>
+
+        <div class="footer-bar">
+          <div>
+            <div class="fl">Recuperado nesta semana</div>
+            <div class="fv" id="money">R$ 255</div>
+          </div>
+          <div style="text-align:right">
+            <div class="fl">Vagas preenchidas</div>
+            <div class="fv" id="filled">3 de 5</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= PROFISSIONAL · FILA ================= -->
+      <section class="view" id="v-fila">
+        <div class="hd">
+          <h2>Quem está esperando</h2>
+          <span class="count">9 na fila</span>
+        </div>
+        <p class="caption" style="padding-bottom:4px">Toda vez que você responde “não tenho esse horário”, a gente guarda o pedido aqui.</p>
+
+        <div class="seclabel">Pedidos desta semana</div>
+        <div class="rows">
+          <div class="row">
+            <div class="rmain">
+              <div class="rname">Bruna Cardoso</div>
+              <div class="rmeta">quer sábado de manhã · gel · pediu há 2 dias</div>
+            </div>
+            <span class="tag ok">encaixa hoje</span>
+          </div>
+          <div class="row">
+            <div class="rmain">
+              <div class="rname">Juliana Prado</div>
+              <div class="rmeta">quer qualquer dia no horário de almoço · mão simples</div>
+            </div>
+            <span class="tag ok">encaixa hoje</span>
+          </div>
+          <div class="row">
+            <div class="rmain">
+              <div class="rname">Tatiane Alves</div>
+              <div class="rmeta">quer sexta depois das 17h · gel · pediu há 4 dias</div>
+            </div>
+            <span class="tag warn">só sexta</span>
+          </div>
+          <div class="row">
+            <div class="rmain">
+              <div class="rname">Simone Braga</div>
+              <div class="rmeta">quer terça ou quarta · pé e mão · pediu há 5 dias</div>
+            </div>
+            <span class="tag warn">só na semana</span>
+          </div>
+        </div>
+
+        <div class="seclabel">Chegou agora no WhatsApp</div>
+        <button class="captura" id="captura">
+          <span class="cap-b">
+            <span class="cap-t">“Oi, tem horário sábado de manhã?”</span>
+            <span class="cap-d">Larissa Menezes · há 12 minutos · você respondeu que não tinha</span>
+          </span>
+          <span class="cap-a" id="cap-a">Guardar na fila</span>
+        </button>
+        <p class="caption" style="padding-top:10px">Guardando o pedido, ela entra na lista de quem avisamos quando abrir sábado.</p>
+
+        <div class="footer-bar">
+          <div>
+            <div class="fl">Pedidos guardados no mês</div>
+            <div class="fv">31</div>
+          </div>
+          <div style="text-align:right">
+            <div class="fl">Viraram atendimento</div>
+            <div class="fv">12</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= PROFISSIONAL · CLIENTES ================= -->
+      <section class="view" id="v-clientes">
+        <div class="hd">
+          <h2>Clientes</h2>
+          <button class="addbtn" data-goto="importar">+ Importar</button>
+        </div>
+        <p class="caption" style="padding-bottom:4px">142 ativas · 84 vieram do WhatsApp</p>
+        <div class="seclabel">Precisam de atenção</div>
+        <div class="rows">
+          <div class="row">
+            <div class="rmain">
+              <div class="rname">Patrícia Alves</div>
+              <div class="rmeta">faltou 2 das últimas 5 vezes · última visita há 34 dias</div>
+            </div>
+            <span class="tag alert">alto risco</span>
+          </div>
+          <div class="row">
+            <div class="rmain">
+              <div class="rname">Renata Lima</div>
+              <div class="rmeta">retorno atrasado em 12 dias · costuma vir a cada 21</div>
+            </div>
+            <span class="tag warn">sumiu</span>
+          </div>
+        </div>
+        <div class="seclabel">Aceitam encaixe no mesmo dia</div>
+        <div class="rows">
+          <div class="row">
+            <div class="rmain">
+              <div class="rname">Bruna Cardoso</div>
+              <div class="rmeta">aceitou 3 de 4 convites · mora a 8 min</div>
+            </div>
+            <span class="tag ok">92%</span>
+          </div>
+          <div class="row">
+            <div class="rmain">
+              <div class="rname">Juliana Prado</div>
+              <div class="rmeta">trabalha na rua de trás · almoça 11h</div>
+            </div>
+            <span class="tag ok">64%</span>
+          </div>
+        </div>
+        <div class="hd" style="padding-top:18px">
+          <h2 style="font-size:15px">Duração real dos serviços</h2>
+          <button class="addbtn" data-goto="servico">Ver detalhe</button>
+        </div>
+        <button class="row" data-goto="servico" style="padding-left:18px;padding-right:18px;width:100%">
+          <span class="rmain">
+            <span class="rname">Esmaltação em gel</span>
+            <span class="rmeta">você agenda 45 min · leva 1h08 na média</span>
+          </span>
+          <span class="tag warn">+23 min</span>
+        </button>
+        <div class="rows">
+          <div class="row">
+            <div class="rmain">
+              <div class="rname">Pé e mão simples</div>
+              <div class="rmeta">você agenda 1h · leva 52 min na média</div>
+            </div>
+            <span class="tag ok">no tempo</span>
+          </div>
+          <div class="row">
+            <div class="rmain">
+              <div class="rname">Manutenção de alongamento</div>
+              <div class="rmeta">você agenda 1h30 · leva 1h34 na média</div>
+            </div>
+            <span class="tag ok">no tempo</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= PROFISSIONAL · GANHOS ================= -->
+      <section class="view" id="v-ganhos">
+        <div class="hero">
+          <div class="hl">Recuperado em setembro</div>
+          <div class="hv">R$ 1.140</div>
+          <div class="hs">19 vagas que teriam ficado vazias foram preenchidas.</div>
+        </div>
+        <div class="seclabel">Vagas recuperadas por semana</div>
+        <div class="chart">
+          <div class="barrow"><span class="blab">sem 1</span><span class="btrack"><span class="bfill" style="width:40%"></span></span><span class="bval">4</span></div>
+          <div class="barrow"><span class="blab">sem 2</span><span class="btrack"><span class="bfill" style="width:60%"></span></span><span class="bval">6</span></div>
+          <div class="barrow"><span class="blab">sem 3</span><span class="btrack"><span class="bfill" style="width:50%"></span></span><span class="bval">5</span></div>
+          <div class="barrow"><span class="blab">sem 4</span><span class="btrack"><span class="bfill dim" style="width:40%"></span></span><span class="bval">4</span></div>
+        </div>
+        <p class="caption">Semana 4 ainda em andamento.</p>
+        <div class="tiles">
+          <div class="tile">
+            <span class="tl">Taxa de ocupação</span>
+            <span class="tv">86%</span>
+            <span class="td up">▲ 11 pontos</span>
+          </div>
+          <div class="tile">
+            <span class="tl">Faltas no mês</span>
+            <span class="tv">7</span>
+            <span class="td up">▼ 5 vs agosto</span>
+          </div>
+          <div class="tile">
+            <span class="tl">Convites aceitos</span>
+            <span class="tv">19 de 26</span>
+            <span class="td flat">73% de resposta</span>
+          </div>
+          <div class="tile">
+            <span class="tl">Tempo até o encaixe</span>
+            <span class="tv">6 min</span>
+            <span class="td up">▼ 3 min</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= IMPORTAR CLIENTES · ORIGEM ================= -->
+      <section class="view" id="v-importar">
+        <div class="lead">
+          <div class="k" style="color:var(--accent)">Sua base de clientes</div>
+          <h3>De onde vamos trazer?</h3>
+          <p>Ninguém precisa ser cadastrado uma pessoa por vez.</p>
+        </div>
+        <div class="origens">
+          <button class="origem on" data-origem="wa">
+            <span class="or-i">✆</span>
+            <span class="or-b">
+              <span class="or-t">WhatsApp Business</span>
+              <span class="or-d">Lemos quem já conversou com você sobre horário. Recomendado.</span>
+            </span>
+            <span class="or-c">›</span>
+          </button>
+          <button class="origem" data-origem="contatos">
+            <span class="or-i">☰</span>
+            <span class="or-b">
+              <span class="or-t">Contatos do celular</span>
+              <span class="or-d">Você escolhe quem é cliente na lista.</span>
+            </span>
+            <span class="or-c">›</span>
+          </button>
+          <button class="origem" data-origem="planilha">
+            <span class="or-i">▦</span>
+            <span class="or-b">
+              <span class="or-t">Planilha ou agenda antiga</span>
+              <span class="or-d">Aceita .xlsx e .csv, e também exportação de outros aplicativos.</span>
+            </span>
+            <span class="or-c">›</span>
+          </button>
+          <button class="origem" data-origem="manual">
+            <span class="or-i">+</span>
+            <span class="or-b">
+              <span class="or-t">Digitar agora</span>
+              <span class="or-d">Para quem tem poucas clientes ou quer começar devagar.</span>
+            </span>
+            <span class="or-c">›</span>
+          </button>
+        </div>
+
+        <div class="seclabel">O que a gente faz com isso</div>
+        <div class="passos">
+          <div class="passo"><span class="num">✓</span><span class="passo-t">Trazemos <b>nome e telefone</b>, mais o que já foi falado sobre horário. Não lemos o conteúdo das suas conversas pessoais.</span></div>
+          <div class="passo"><span class="num">✓</span><span class="passo-t">Ninguém recebe mensagem automática por ter sido importado. <b>Só quem você chamar.</b></span></div>
+          <div class="passo"><span class="num">✓</span><span class="passo-t">A cliente pode pedir para sair da lista a qualquer momento, conforme a LGPD.</span></div>
+        </div>
+
+        <div class="actions">
+          <button class="cta" id="ir-import">Continuar com o WhatsApp</button>
+          <button class="cta ghost" data-back="clientes">Agora não</button>
+        </div>
+      </section>
+
+      <!-- ================= WHATSAPP · CONECTAR ================= -->
+      <section class="view" id="v-impwa">
+        <div class="lead">
+          <div class="k" style="color:var(--accent)">Passo 2 de 3</div>
+          <h3>Conectar o WhatsApp Business</h3>
+          <p>Você autoriza pelo próprio WhatsApp e pode desconectar quando quiser.</p>
+        </div>
+        <div class="seclabel">O que vamos ler</div>
+        <div class="passos">
+          <div class="passo"><span class="num">✓</span><span class="passo-t">Nome e telefone de quem trocou mensagem com você.</span></div>
+          <div class="passo"><span class="num">✓</span><span class="passo-t">Mensagens que citam <b>horário, agendamento, encaixe e nomes de serviços</b>, para identificar pedidos.</span></div>
+          <div class="passo"><span class="num">✕</span><span class="passo-t">Não lemos conversas pessoais, grupos, fotos, áudios nem documentos.</span></div>
+        </div>
+        <div class="seclabel">Sua conta conectada</div>
+        <div class="memb">
+          <span class="mav">SM</span>
+          <span style="flex:1;min-width:0"><span class="mn">Studio Marli</span><span class="mm">+55 11 9••••-3021 · WhatsApp Business</span></span>
+          <span class="statusdot pend">aguardando</span>
+        </div>
+        <div class="actions">
+          <button class="cta" id="conectar-wa">Autorizar e analisar conversas</button>
+          <button class="cta ghost" data-back="importar">Escolher outra origem</button>
+        </div>
+      </section>
+
+      <!-- ================= CONTATOS DO CELULAR ================= -->
+      <section class="view" id="v-impcontatos">
+        <div class="lead">
+          <div class="k" style="color:var(--accent)">Passo 2 de 3</div>
+          <h3>Contatos do celular</h3>
+          <p>Encontramos 213 contatos. Como não temos histórico deles, marque quem é cliente.</p>
+        </div>
+        <div class="hd" style="padding-top:8px">
+          <span class="count" id="ct-n">0 marcados</span>
+          <button class="addbtn" id="ct-todos">Marcar todos</button>
+        </div>
+        <button class="cli ct" aria-pressed="false"><span class="box">✓</span>
+          <span><span class="cn">Adriana Peixoto</span><span class="cw">+55 11 9••••-4410</span></span>
+        </button>
+        <button class="cli ct" aria-pressed="false"><span class="box">✓</span>
+          <span><span class="cn">Bruna Cardoso</span><span class="cw">+55 11 9••••-8822</span></span>
+        </button>
+        <button class="cli ct" aria-pressed="false"><span class="box">✓</span>
+          <span><span class="cn">Carla Nunes</span><span class="cw">+55 11 9••••-1207</span></span>
+        </button>
+        <button class="cli ct" aria-pressed="false"><span class="box">✓</span>
+          <span><span class="cn">Dentista Dr. Paulo</span><span class="cw">+55 11 9••••-7788</span></span>
+        </button>
+        <button class="cli ct" aria-pressed="false"><span class="box">✓</span>
+          <span><span class="cn">Dona Neide</span><span class="cw">+55 11 9••••-0344</span></span>
+        </button>
+        <p class="caption" style="padding-top:10px">Mostrando 5 de 213, em ordem alfabética.</p>
+        <div class="actions">
+          <button class="cta" id="ct-import" disabled>Selecione quem é cliente</button>
+          <button class="cta ghost" data-back="importar">Escolher outra origem</button>
+        </div>
+      </section>
+
+      <!-- ================= PLANILHA ================= -->
+      <section class="view" id="v-impplanilha">
+        <div class="lead">
+          <div class="k" style="color:var(--accent)">Passo 2 de 3</div>
+          <h3>Planilha ou agenda antiga</h3>
+          <p>Aceitamos .xlsx, .csv e a exportação em .csv de outros aplicativos de agendamento.</p>
+        </div>
+        <div class="form">
+          <button class="arquivo" id="arquivo">
+            <span class="arq-i">▦</span>
+            <span class="arq-b">
+              <span class="arq-t" id="arq-t">Escolher arquivo</span>
+              <span class="arq-d" id="arq-d">.xlsx, .csv · até 5 MB</span>
+            </span>
+          </button>
+          <p class="hint">Precisa ter pelo menos uma coluna de nome e uma de telefone. O resto é opcional.</p>
+        </div>
+
+        <div id="mapa" hidden>
+          <div class="seclabel">Como entendemos suas colunas</div>
+          <div class="rows">
+            <div class="row"><div class="rmain"><div class="rname">Coluna A · “Cliente”</div><div class="rmeta">virou o campo Nome</div></div><span class="tag ok">ok</span></div>
+            <div class="row"><div class="rmain"><div class="rname">Coluna B · “Celular”</div><div class="rmeta">virou o campo Telefone</div></div><span class="tag ok">ok</span></div>
+            <div class="row"><div class="rmain"><div class="rname">Coluna C · “Últ. atendimento”</div><div class="rmeta">virou o campo Última visita</div></div><span class="tag ok">ok</span></div>
+            <div class="row"><div class="rmain"><div class="rname">Coluna D · “Obs”</div><div class="rmeta">não reconhecida, será ignorada</div></div><span class="tag warn">ignorar</span></div>
+          </div>
+          <div class="seclabel">Prévia das 3 primeiras linhas</div>
+          <div class="rows">
+            <div class="row"><div class="rmain"><div class="rname">Bruna Cardoso</div><div class="rmeta">11 9••••-8822 · última visita 28/08</div></div></div>
+            <div class="row"><div class="rmain"><div class="rname">Carla Nunes</div><div class="rmeta">11 9••••-1207 · última visita 02/09</div></div></div>
+            <div class="row"><div class="rmain"><div class="rname">Simone Braga</div><div class="rmeta">11 9••••-5590 · sem data</div></div></div>
+          </div>
+          <p class="caption" style="padding-top:8px">96 linhas lidas · 2 sem telefone serão descartadas.</p>
+        </div>
+
+        <div class="actions">
+          <button class="cta" id="pl-import" disabled>Escolha um arquivo primeiro</button>
+          <button class="cta ghost" data-back="importar">Escolher outra origem</button>
+        </div>
+      </section>
+
+      <!-- ================= CADASTRO MANUAL ================= -->
+      <section class="view" id="v-impmanual">
+        <div class="lead">
+          <div class="k" style="color:var(--accent)">Cadastro manual</div>
+          <h3 id="mn-titulo">Nova cliente</h3>
+          <p>Só nome e telefone são obrigatórios. O resto melhora as sugestões.</p>
+        </div>
+        <div class="aviso" id="mn-aviso" hidden>
+          <span class="av-i">✓</span>
+          <span class="av-b">
+            <span class="av-t" id="mn-aviso-t">Cliente salva</span>
+            <span class="av-d" id="mn-aviso-d">Ela já pode receber convite quando abrir uma vaga.</span>
+          </span>
+          <button class="av-a" id="mn-desfazer">Desfazer</button>
+        </div>
+        <div class="form">
+          <div class="field">
+            <label for="mn-nome">Nome</label>
+            <input id="mn-nome" placeholder="ex: Larissa Menezes">
+            <span class="erro-campo" id="err-nome" hidden>Digite o nome da cliente.</span>
+          </div>
+          <div class="field">
+            <label for="mn-tel">Telefone</label>
+            <input id="mn-tel" placeholder="(11) 90000-0000" inputmode="numeric">
+            <span class="erro-campo" id="err-tel" hidden>Telefone incompleto. Use DDD mais 8 ou 9 dígitos.</span>
+          </div>
+          <div class="field">
+            <label>Serviço que ela costuma fazer</label>
+            <div class="servs" style="padding:0">
+              <button class="serv on"><span class="serv-n">Esmaltação em gel</span><span class="serv-t">1h05</span></button>
+              <button class="serv"><span class="serv-n">Pé e mão</span><span class="serv-t">1h</span></button>
+              <button class="serv"><span class="serv-n">Alongamento</span><span class="serv-t">1h30</span></button>
+            </div>
+          </div>
+          <div class="field" style="margin-top:14px">
+            <label>Aceita encaixe no mesmo dia?</label>
+            <div class="seg" id="seg-encaixe">
+              <button class="segbtn" aria-pressed="true">Sim</button>
+              <button class="segbtn" aria-pressed="false">Não</button>
+              <button class="segbtn" aria-pressed="false">Perguntar</button>
+            </div>
+          </div>
+          <div class="field">
+            <label for="mn-obs">Observação</label>
+            <input id="mn-obs" placeholder="ex: prefere sábado de manhã">
+          </div>
+        </div>
+        <div id="mn-bloco" hidden>
+          <div class="seclabel">Cadastradas nesta sessão <span id="mn-n" style="color:var(--ink-3)">(0)</span></div>
+          <div id="mn-lista"></div>
+        </div>
+        <p class="caption" id="mn-conta">Nenhuma cliente cadastrada ainda. Preencha os campos acima e salve.</p>
+        <div class="actions">
+          <button class="cta" id="mn-salvar">Salvar cliente</button>
+          <button class="cta ghost" id="mn-fim">Concluir e ver a base</button>
+        </div>
+      </section>
+
+      <!-- ================= IMPORTAR CLIENTES · REVISÃO ================= -->
+      <section class="view" id="v-revisarimport">
+        <div class="lead">
+          <div class="k" style="color:var(--accent)">Passo 2 de 2</div>
+          <h3 id="imp-titulo">Encontramos 84 pessoas</h3>
+          <p id="imp-sub">Marcamos quem já perguntou por horário. Desmarque quem não for cliente.</p>
+        </div>
+
+        <div class="seclabel">Já pediram horário com você</div>
+        <button class="cli" aria-pressed="true"><span class="box">✓</span>
+          <span><span class="cn">Bruna Cardoso</span><span class="cw">3 conversas sobre horário · última há 2 dias</span></span>
+        </button>
+        <button class="cli" aria-pressed="true"><span class="box">✓</span>
+          <span><span class="cn">Tatiane Alves</span><span class="cw">pediu sexta à tarde · há 4 dias</span></span>
+        </button>
+        <button class="cli" aria-pressed="true"><span class="box">✓</span>
+          <span><span class="cn">Larissa Menezes</span><span class="cw">pediu sábado de manhã · há 12 minutos</span></span>
+        </button>
+
+        <div class="seclabel">Provavelmente clientes</div>
+        <button class="cli" aria-pressed="true"><span class="box">✓</span>
+          <span><span class="cn">Dona Neide</span><span class="cw">conversa recorrente há 3 anos</span></span>
+        </button>
+        <button class="cli" aria-pressed="true"><span class="box">✓</span>
+          <span><span class="cn">Simone Braga</span><span class="cw">mensagens sobre pé e mão</span></span>
+        </button>
+
+        <div class="seclabel">Não parecem clientes</div>
+        <button class="cli" aria-pressed="false"><span class="box">✓</span>
+          <span><span class="cn">Fornecedor Esmaltes SP</span><span class="cw">conversa comercial</span></span>
+        </button>
+        <button class="cli" aria-pressed="false"><span class="box">✓</span>
+          <span><span class="cn">Grupo Família</span><span class="cw">grupo, não é atendimento</span></span>
+        </button>
+
+        <p class="caption" style="padding-top:10px">Mostrando 7 de 84. Você pode revisar o resto depois, sem pressa.</p>
+
+        <div class="actions">
+          <button class="cta" id="confirmar-import">Importar 5 clientes</button>
+          <button class="cta ghost" data-back="importar">Trocar a origem</button>
+        </div>
+      </section>
+
+      <!-- ================= IMPORTAR CLIENTES · PRONTO ================= -->
+      <section class="view" id="v-importok">
+        <div class="done">
+          <div class="seal">✓</div>
+          <h3 id="ok-total">84 clientes na sua base</h3>
+          <p id="ok-nota">A partir de agora, quando abrir uma vaga, já temos quem chamar.</p>
+          <div class="receipt">
+            <div class="rline"><span class="rk" id="ok-fonte-l">Vieram de: WhatsApp</span><span class="rv" id="ok-fonte-v">84</span></div>
+            <div class="rline" id="ok-linha-pediram"><span class="rk">Já pediram horário</span><span class="rv" id="ok-pediram">12</span></div>
+            <div class="rline" id="ok-linha-fila"><span class="rk">Entraram na fila de espera</span><span class="rv" id="ok-fila">9</span></div>
+            <div class="rline total"><span class="rk">Prontas para receber convite</span><span class="rv" id="ok-prontas">84</span></div>
+          </div>
+        </div>
+        <div class="seclabel">Antes de sair daqui</div>
+        <div class="passos">
+          <div class="passo"><span class="num">1</span><span class="passo-t">Nenhuma mensagem foi enviada. A base só é usada quando você abre uma vaga.</span></div>
+          <div class="passo"><span class="num">2</span><span class="passo-t">Marque quem aceita encaixe no mesmo dia para melhorar as sugestões.</span></div>
+        </div>
+        <div class="actions">
+          <button class="cta" data-back="fila">Ver quem está esperando</button>
+          <button class="cta ghost" data-back="clientes">Ir para clientes</button>
+        </div>
+      </section>
+
+      <!-- ================= PROFISSIONAL · SERVIÇO E TEMPO ================= -->
+      <section class="view" id="v-servico">
+        <div class="lead">
+          <div class="k" style="color:var(--warn)">Serviço que estoura o tempo</div>
+          <h3>Esmaltação em gel</h3>
+          <p>Medimos as últimas 23 vezes que você fez este serviço.</p>
+        </div>
+        <div class="tiles">
+          <div class="tile">
+            <span class="tl">Você marca na agenda</span>
+            <span class="tv">45 min</span>
+            <span class="td flat">tempo cadastrado</span>
+          </div>
+          <div class="tile">
+            <span class="tl">Leva de verdade</span>
+            <span class="tv">1h08</span>
+            <span class="td down">▲ 23 min a mais</span>
+          </div>
+        </div>
+        <div class="seclabel">Como foi medido</div>
+        <div class="passos">
+          <div class="passo"><span class="num">1</span><span class="passo-t">Marcamos o início quando você abre o atendimento na agenda.</span></div>
+          <div class="passo"><span class="num">2</span><span class="passo-t">Marcamos o fim quando você conclui ou começa a próxima cliente.</span></div>
+          <div class="passo"><span class="num">3</span><span class="passo-t">Você confirma ou corrige o tempo no fim do dia. <b>Nada entra na média sem o seu aceite.</b></span></div>
+        </div>
+        <div class="seclabel">Últimos atendimentos</div>
+        <div class="chart">
+          <div class="barrow"><span class="blab">Carla</span><span class="btrack"><span class="bfill" style="width:88%"></span></span><span class="bval">1h08</span></div>
+          <div class="barrow"><span class="blab">Bruna</span><span class="btrack"><span class="bfill" style="width:74%"></span></span><span class="bval">0h57</span></div>
+          <div class="barrow"><span class="blab">Tatiane</span><span class="btrack"><span class="bfill" style="width:100%"></span></span><span class="bval">1h17</span></div>
+          <div class="barrow"><span class="blab">Simone</span><span class="btrack"><span class="bfill" style="width:69%"></span></span><span class="bval">0h53</span></div>
+        </div>
+        <p class="caption">A Tatiane sempre passa de 1h15. Já ajustamos a agenda dela.</p>
+        <div class="seclabel">Ajuste</div>
+        <div class="form">
+          <div class="field">
+            <label for="s-tempo">Tempo padrão deste serviço</label>
+            <input id="s-tempo" value="1h05">
+          </div>
+          <p class="hint">Sugerimos 1h05, que cobre 8 de cada 10 atendimentos sem sobrar tempo ocioso.</p>
+        </div>
+        <div class="actions">
+          <button class="cta" id="aceitar-tempo">Usar 1h05 daqui pra frente</button>
+          <button class="cta ghost" data-back="clientes">Deixar como está</button>
+        </div>
+      </section>
+
+      <!-- ================= VAGA ================= -->
+      <section class="view" id="v-slot">
+        <div class="lead">
+          <div class="k">Vaga aberta às 11:00</div>
+          <h3>Quem você quer chamar?</h3>
+          <p>Estas pessoas pediram horário e ficaram sem. A escolha final é sua.</p>
+        </div>
+        <div class="seclabel">Sugeridas</div>
+        <button class="cand" aria-pressed="true" data-n="Bruna Cardoso">
+          <span class="box">✓</span>
+          <span>
+            <span class="cn">Bruna Cardoso</span>
+            <span class="cw">pediu sábado de manhã há 2 dias · faz gel, cabe em 1h30</span>
+            <span class="fonte">porque você respondeu “não tenho” para ela no WhatsApp</span>
+          </span>
+          <span class="pct">92%</span>
+        </button>
+        <button class="cand" aria-pressed="false" data-n="Renata Lima">
+          <span class="box">✓</span>
+          <span>
+            <span class="cn">Renata Lima</span>
+            <span class="cw">retorno atrasado em 12 dias · costuma vir a cada 21</span>
+            <span class="fonte">pelo histórico de atendimentos dela com você</span>
+          </span>
+          <span class="pct">78%</span>
+        </button>
+        <button class="cand" aria-pressed="false" data-n="Juliana Prado">
+          <span class="box">✓</span>
+          <span>
+            <span class="cn">Juliana Prado</span>
+            <span class="cw">trabalha na rua de trás · chega em 6 min</span>
+            <span class="fonte">porque você marcou “aceita encaixe” no cadastro dela</span>
+          </span>
+          <span class="pct">64%</span>
+        </button>
+
+        <div class="modo">
+          <div class="modo-l">Como enviar</div>
+          <div class="seg" id="seg-envio">
+            <button class="segbtn" aria-pressed="true" data-envio="fila">Uma por vez</button>
+            <button class="segbtn" aria-pressed="false" data-envio="todas">Todas juntas</button>
+          </div>
+          <p class="modo-h" id="modo-h">Chamamos a Bruna primeiro e esperamos 10 minutos. Se ela não responder, seguimos para a próxima. Ninguém recebe a promessa do mesmo horário ao mesmo tempo.</p>
+        </div>
+
+        <div class="actions">
+          <button class="cta" id="send">Revisar e enviar</button>
+          <button class="cta ghost" id="peek">Ver a mensagem que elas recebem</button>
+        </div>
+      </section>
+
+      <!-- ================= REVISAR ANTES DE ENVIAR ================= -->
+      <section class="view" id="v-revisar">
+        <div class="lead">
+          <div class="k" style="color:var(--accent)">Confira antes de enviar</div>
+          <h3>Você aprova esta mensagem?</h3>
+          <p>Nada sai da sua conta sem você ler antes.</p>
+        </div>
+        <div class="form">
+          <div class="previa">
+            <div class="previa-h">Para <strong id="rev-quem">Bruna Cardoso</strong> · pelo WhatsApp do Studio Marli</div>
+            <div class="previa-b">
+              <p><strong>Oi, Bruna!</strong></p>
+              <p>Abriu um horário hoje às 11:00 com a Marli, do jeito que você pediu sábado. Quer ficar com ele?</p>
+            </div>
+          </div>
+          <button class="editar" id="editar">Editar a mensagem</button>
+        </div>
+        <div class="seclabel">O que vai acontecer</div>
+        <div class="passos" id="passos"></div>
+        <div class="actions">
+          <button class="cta" id="aprovar">Aprovar e enviar</button>
+          <button class="cta ghost" data-back="slot">Voltar e mudar</button>
+        </div>
+      </section>
+
+      <!-- ================= ENVIANDO ================= -->
+      <section class="view" id="v-send">
+        <div class="sending">
+          <div class="pulse">↗</div>
+          <h3>Convites enviados</h3>
+          <p class="sub" id="send-sub">Chamando uma de cada vez, com o horário segurado.</p>
+          <div class="log" id="log"></div>
+        </div>
+      </section>
+
+      <!-- ================= CONFIRMADO ================= -->
+      <section class="view" id="v-done">
+        <div class="done">
+          <div class="seal">✓</div>
+          <h3>11:00 preenchido</h3>
+          <p>A Bruna aceitou em 4 minutos. Ela estava na fila desde sábado, quando você não tinha horário.</p>
+          <div class="receipt">
+            <div class="rline"><span class="rk">Cliente</span><span class="rv">Bruna Cardoso</span></div>
+            <div class="rline"><span class="rk">Horário</span><span class="rv">hoje, 11:00</span></div>
+            <div class="rline"><span class="rk">Serviço</span><span class="rv">esmaltação em gel</span></div>
+            <div class="rline"><span class="rk">Valor do horário</span><span class="rv">R$ 85</span></div><div class="rline total"><span class="rk">Recuperado</span><span class="rv">R$ 85 de R$ 85</span></div>
+          </div>
+        </div>
+        <div class="actions"><button class="cta" id="tolist">Ver minha agenda</button></div>
+      </section>
+
+      <!-- ================= WHATSAPP ================= -->
+      <section class="view" id="v-wa">
+        <div class="wahead">
+          <div class="mark" style="border-radius:50%">SM</div>
+          <div><div class="brand">Studio Marli</div><div class="brand-s">online</div></div>
+        </div>
+        <div class="wa">
+          <div class="bub">
+            <p><strong>Oi, Bruna!</strong></p>
+            <p>Abriu um horário hoje às 11:00 com a Marli. Quer ficar com ele?</p>
+            <div style="display:flex;flex-direction:column;gap:6px;border-top:1px solid var(--line);padding-top:9px">
+              <span class="wbtn p">Quero, pode marcar</span>
+              <span class="wbtn">Hoje não dá</span>
+            </div>
+          </div>
+          <div class="wstamp">09:41</div>
+          <div class="bub me"><p>Quero, pode marcar 😍</p></div>
+          <div class="wstamp">09:45 ✓✓</div>
+
+          <div class="bub">
+            <p><strong>Prontinho, Bruna! Horário confirmado.</strong></p>
+            <div class="receipt" style="margin-top:0">
+              <div class="rline"><span class="rk">Quando</span><span class="rv">hoje, 11:00</span></div>
+              <div class="rline"><span class="rk">Com quem</span><span class="rv">Marli</span></div>
+              <div class="rline"><span class="rk">Serviço</span><span class="rv">esmaltação em gel</span></div>
+              <div class="rline"><span class="rk">Onde</span><span class="rv">R. das Palmeiras, 210</span></div>
+            </div>
+            <p style="font-size:12.5px;color:var(--ink-2)">Saia até 10:45, o trânsito está mais lento hoje.</p>
+            <div style="display:flex;flex-direction:column;gap:6px;border-top:1px solid var(--line);padding-top:9px">
+              <span class="wbtn p">Adicionar ao meu calendário</span>
+              <span class="wbtn">Ver como chegar</span>
+              <span class="wbtn">Preciso cancelar</span>
+            </div>
+          </div>
+          <div class="wstamp">09:45</div>
+
+          <div class="lgpd">Seus dados são tratados conforme a LGPD. O Studio Marli não compartilha suas informações com terceiros.</div>
+        </div>
+        <div class="actions"><button class="cta ghost" id="waback">Voltar</button></div>
+      </section>
+
+      <!-- ================= REDE · PAINEL ================= -->
+      <section class="view" id="v-painel">
+        <div class="hero">
+          <div class="hl">Receita recuperada em setembro</div>
+          <div class="hv" id="pn-valor">R$ 47.320</div>
+          <div class="hs" id="pn-sub">612 vagas reocupadas nas 12 unidades da rede.</div>
+        </div>
+        <div class="tiles">
+          <div class="tile">
+            <span class="tl" id="pn-t1l">Ocupação média da rede</span>
+            <span class="tv" id="pn-t1v">81%</span>
+            <span class="td up">▲ 6 pontos vs agosto</span>
+          </div>
+          <div class="tile">
+            <span class="tl">Taxa de no-show</span>
+            <span class="tv">12,4%</span>
+            <span class="td up">▼ 4,1 pontos</span>
+          </div>
+          <div class="tile">
+            <span class="tl" id="pn-t3l">Unidades acima da meta</span>
+            <span class="tv" id="pn-t3v">8 de 12</span>
+            <span class="td flat">meta: 80% de ocupação</span>
+          </div>
+          <div class="tile">
+            <span class="tl">Ticket médio</span>
+            <span class="tv">R$ 148</span>
+            <span class="td up">▲ R$ 9</span>
+          </div>
+        </div>
+        <div class="seclabel" id="pn-graf-t">Ocupação por unidade</div>
+        <div class="chart" id="pn-graf">
+          <div class="barrow"><span class="blab">Moema</span><span class="btrack"><span class="bfill" style="width:94%"></span></span><span class="bval">94%</span></div>
+          <div class="barrow"><span class="blab">Batel</span><span class="btrack"><span class="bfill" style="width:89%"></span></span><span class="bval">89%</span></div>
+          <div class="barrow"><span class="blab">Savassi</span><span class="btrack"><span class="bfill" style="width:85%"></span></span><span class="bval">85%</span></div>
+          <div class="barrow"><span class="blab">Barra</span><span class="btrack"><span class="bfill" style="width:78%"></span></span><span class="bval">78%</span></div>
+          <div class="barrow"><span class="blab">Tijuca</span><span class="btrack"><span class="bfill dim" style="width:61%"></span></span><span class="bval">61%</span></div>
+        </div>
+        <p class="caption" id="pn-graf-c">5 de 12 unidades. Tijuca está abaixo da meta de 80%.</p>
+        <div class="seclabel">Precisa da sua decisão</div>
+        <button class="alertitem" data-goto="alertas">
+          <span class="sev crit">!</span>
+          <span style="flex:1;min-width:0">
+            <span class="al-t" id="pn-al-t">Tijuca perdeu 38 horários em 7 dias</span>
+            <span class="al-d" id="pn-al-d">Duas recepcionistas de licença. Nenhum convite de encaixe foi disparado desde segunda.</span>
+          </span>
+          <span class="al-w">há 2h</span>
+        </button>
+      </section>
+
+      <!-- ================= REDE · UNIDADES ================= -->
+      <section class="view" id="v-unidades">
+        <div class="hd">
+          <h2>Unidades</h2>
+          <button class="addbtn" data-goto="novafilial">+ Nova filial</button>
+        </div>
+        <p class="caption" style="padding-bottom:2px">12 unidades ativas em 4 estados · 68 profissionais</p>
+        <div class="seclabel">Abaixo da meta</div>
+        <button class="unit" data-goto="unidade">
+          <span style="flex:1;min-width:0">
+            <span class="un">Tijuca · RJ</span>
+            <span class="ud">6 profissionais · 38 vagas perdidas na semana</span>
+          </span>
+          <span class="uocc"><span class="uv" style="color:var(--alert)">61%</span><span class="us">ocupação</span></span>
+        </button>
+        <button class="unit">
+          <span style="flex:1;min-width:0">
+            <span class="un">Campo Grande · RJ</span>
+            <span class="ud">4 profissionais · 21 vagas perdidas na semana</span>
+          </span>
+          <span class="uocc"><span class="uv" style="color:var(--warn)">72%</span><span class="us">ocupação</span></span>
+        </button>
+        <div class="seclabel">No alvo</div>
+        <button class="unit">
+          <span style="flex:1;min-width:0">
+            <span class="un">Moema · SP</span>
+            <span class="ud">9 profissionais · 4 vagas perdidas na semana</span>
+          </span>
+          <span class="uocc"><span class="uv" style="color:var(--ok)">94%</span><span class="us">ocupação</span></span>
+        </button>
+        <button class="unit">
+          <span style="flex:1;min-width:0">
+            <span class="un">Batel · PR</span>
+            <span class="ud">7 profissionais · 6 vagas perdidas na semana</span>
+          </span>
+          <span class="uocc"><span class="uv" style="color:var(--ok)">89%</span><span class="us">ocupação</span></span>
+        </button>
+        <button class="unit">
+          <span style="flex:1;min-width:0">
+            <span class="un">Savassi · MG</span>
+            <span class="ud">5 profissionais · 9 vagas perdidas na semana</span>
+          </span>
+          <span class="uocc"><span class="uv" style="color:var(--ok)">85%</span><span class="us">ocupação</span></span>
+        </button>
+      </section>
+
+      <!-- ================= REDE · UNIDADE ================= -->
+      <section class="view" id="v-unidade">
+        <div class="lead">
+          <div class="k">Unidade abaixo da meta</div>
+          <h3>Tijuca · RJ</h3>
+          <p>61% de ocupação nos últimos 7 dias. A meta da rede é 80%.</p>
+        </div>
+        <div class="tiles">
+          <div class="tile">
+            <span class="tl">Vagas perdidas na semana</span>
+            <span class="tv">38</span>
+            <span class="td down">▲ 22 vs semana anterior</span>
+          </div>
+          <div class="tile">
+            <span class="tl">Receita não realizada</span>
+            <span class="tv">R$ 5.624</span>
+            <span class="td down">estimativa pelo ticket local</span>
+          </div>
+        </div>
+        <div class="hd" style="padding-top:18px">
+          <h2 style="font-size:15px">Profissionais da unidade</h2>
+          <button class="addbtn" data-goto="equipeun">Gerenciar</button>
+        </div>
+        <div class="rows">
+          <button class="row" data-goto="profissional" style="width:100%">
+            <span class="rmain">
+              <span class="rname">Ana Beatriz</span>
+              <span class="rmeta">14 vagas perdidas · não usa os convites automáticos</span>
+            </span>
+            <span class="tag alert">54%</span>
+          </button>
+          <div class="row">
+            <div class="rmain">
+              <div class="rname">Fernanda Rocha</div>
+              <div class="rmeta">9 vagas perdidas · convites ativos</div>
+            </div>
+            <span class="tag warn">68%</span>
+          </div>
+          <div class="row">
+            <div class="rmain">
+              <div class="rname">Camila Dias</div>
+              <div class="rmeta">2 vagas perdidas · convites ativos</div>
+            </div>
+            <span class="tag ok">91%</span>
+          </div>
+        </div>
+        <div class="actions">
+          <button class="cta" id="ativar">Ativar convites para toda a unidade</button>
+          <button class="cta ghost" data-back="unidades">Voltar</button>
+        </div>
+      </section>
+
+      <!-- ================= REDE · EQUIPE DA UNIDADE ================= -->
+      <section class="view" id="v-equipeun">
+        <div class="hd">
+          <h2 id="eq-titulo">Equipe da Tijuca</h2>
+          <button class="addbtn" data-goto="novofunc">+ Funcionário</button>
+        </div>
+        <p class="caption" style="padding-bottom:4px">6 pessoas · 4 atendem clientes · 2 na recepção</p>
+
+        <div class="seclabel">Quem atende</div>
+        <button class="memb" data-goto="profissional">
+          <span class="mav">AB</span>
+          <span style="flex:1;min-width:0">
+            <span class="mn">Ana Beatriz</span>
+            <span class="mm">corte, coloração · comissão 40%</span>
+          </span>
+          <span class="tag alert">54%</span>
+        </button>
+        <button class="memb">
+          <span class="mav">FR</span>
+          <span style="flex:1;min-width:0">
+            <span class="mn">Fernanda Rocha</span>
+            <span class="mm">corte, escova, hidratação · comissão 40%</span>
+          </span>
+          <span class="tag warn">68%</span>
+        </button>
+        <button class="memb">
+          <span class="mav">CD</span>
+          <span style="flex:1;min-width:0">
+            <span class="mn">Camila Dias</span>
+            <span class="mm">corte, coloração, mechas · comissão 45%</span>
+          </span>
+          <span class="tag ok">91%</span>
+        </button>
+        <button class="memb">
+          <span class="mav">TS</span>
+          <span style="flex:1;min-width:0">
+            <span class="mn">Thiago Souza</span>
+            <span class="mm">barba, corte masculino · comissão 40%</span>
+          </span>
+          <span class="tag ok">87%</span>
+        </button>
+
+        <div class="seclabel">Recepção e administração</div>
+        <div class="memb">
+          <span class="mav">PM</span>
+          <span style="flex:1;min-width:0">
+            <span class="mn">Patrícia Moura</span>
+            <span class="mm">recepção · pode remarcar e enviar convites</span>
+          </span>
+          <span class="role" data-r="Recepção">Recepção</span>
+        </div>
+        <div class="memb">
+          <span class="mav">RC</span>
+          <span style="flex:1;min-width:0">
+            <span class="mn">Rafael Costa</span>
+            <span class="mm">você · acesso total à unidade</span>
+          </span>
+          <span class="role" data-r="Gestor">Gestor</span>
+        </div>
+      </section>
+
+      <!-- ================= REDE · PERFIL DO PROFISSIONAL ================= -->
+      <section class="view" id="v-profissional">
+        <div class="lead">
+          <div class="k" style="color:var(--alert)">Abaixo da média da unidade</div>
+          <h3>Ana Beatriz</h3>
+          <p>Corte e coloração · na equipe há 2 anos · comissão de 40%</p>
+        </div>
+        <div class="tiles">
+          <div class="tile">
+            <span class="tl">Ocupação</span>
+            <span class="tv">54%</span>
+            <span class="td down">▼ 33 pontos vs equipe</span>
+          </div>
+          <div class="tile">
+            <span class="tl">Vagas perdidas na semana</span>
+            <span class="tv">14</span>
+            <span class="td down">▲ 6 vs semana anterior</span>
+          </div>
+        </div>
+
+        <div class="seclabel">Tempo por serviço</div>
+        <p class="caption" style="padding-top:0;padding-bottom:8px">Cada profissional tem o próprio ritmo. Estes tempos são medidos nos atendimentos dela, não na média do salão.</p>
+        <div class="rows">
+          <div class="row">
+            <div class="rmain">
+              <div class="rname">Corte feminino</div>
+              <div class="rmeta">padrão do salão 45 min · Ana leva 1h02 · 38 medições</div>
+            </div>
+            <span class="tag warn">+17 min</span>
+          </div>
+          <div class="row">
+            <div class="rmain">
+              <div class="rname">Coloração</div>
+              <div class="rmeta">padrão do salão 2h · Ana leva 2h05 · 21 medições</div>
+            </div>
+            <span class="tag ok">no tempo</span>
+          </div>
+          <div class="row">
+            <div class="rmain">
+              <div class="rname">Escova</div>
+              <div class="rmeta">padrão do salão 40 min · Ana leva 33 min · 52 medições</div>
+            </div>
+            <span class="tag ok">7 min antes</span>
+          </div>
+        </div>
+
+        <div class="seclabel">Permissões</div>
+        <div class="perms">
+          <div class="perm"><span class="perm-t">Enviar convites de encaixe</span><span class="chip off" data-toggle>Desligado</span></div>
+          <div class="perm"><span class="perm-t">Aceitar troca de profissional</span><span class="chip on" data-toggle>Ligado</span></div>
+          <div class="perm"><span class="perm-t">Ver a agenda dos colegas</span><span class="chip off" data-toggle>Desligado</span></div>
+        </div>
+        <p class="caption">Os convites estão desligados para a Ana. É a causa provável das 14 vagas perdidas.</p>
+        <div class="actions">
+          <button class="cta" id="ligar-convites">Ligar convites para a Ana</button>
+          <button class="cta ghost" data-back="equipeun">Voltar</button>
+        </div>
+      </section>
+
+      <!-- ================= REDE · NOVO FUNCIONÁRIO ================= -->
+      <section class="view" id="v-novofunc">
+        <div class="lead">
+          <div class="k" style="color:var(--accent)">Equipe da Tijuca</div>
+          <h3>Novo funcionário</h3>
+          <p>Ele recebe um convite e escolhe a própria senha.</p>
+        </div>
+        <div class="form">
+          <div class="field">
+            <label for="nf-nome">Nome</label>
+            <input id="nf-nome" placeholder="ex: Thiago Souza">
+          </div>
+          <div class="duo">
+            <div class="field">
+              <label for="nf-cel">Celular</label>
+              <input id="nf-cel" placeholder="(21) 90000-0000">
+            </div>
+            <div class="field uf" style="flex:0 0 120px">
+              <label for="nf-com">Comissão</label>
+              <input id="nf-com" value="40%">
+            </div>
+          </div>
+          <div class="field">
+            <label for="nf-mail">E-mail</label>
+            <input id="nf-mail" placeholder="thiago@rede.com.br">
+          </div>
+          <div class="field">
+            <label>Função</label>
+            <div class="seg" id="seg-func">
+              <button class="segbtn" aria-pressed="true">Atende</button>
+              <button class="segbtn" aria-pressed="false">Recepção</button>
+              <button class="segbtn" aria-pressed="false">Gestor</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="seclabel">Serviços que ele executa</div>
+        <p class="caption" style="padding-top:0;padding-bottom:8px">Toque para marcar. O tempo começa no padrão do salão e vai se ajustando ao ritmo dele.</p>
+        <div class="servs" id="servs">
+          <button class="serv on"><span class="serv-n">Corte masculino</span><span class="serv-t">30 min</span></button>
+          <button class="serv on"><span class="serv-n">Barba</span><span class="serv-t">25 min</span></button>
+          <button class="serv"><span class="serv-n">Corte feminino</span><span class="serv-t">45 min</span></button>
+          <button class="serv"><span class="serv-n">Coloração</span><span class="serv-t">2h</span></button>
+          <button class="serv"><span class="serv-n">Escova</span><span class="serv-t">40 min</span></button>
+          <button class="serv"><span class="serv-n">Hidratação</span><span class="serv-t">50 min</span></button>
+        </div>
+
+        <div class="actions">
+          <button class="cta" id="convidar-func">Enviar convite</button>
+          <button class="cta ghost" data-back="equipeun">Cancelar</button>
+        </div>
+      </section>
+
+      <!-- ================= REDE · NOVA FILIAL ================= -->
+      <section class="view" id="v-novafilial">
+        <div class="lead">
+          <div class="k" style="color:var(--accent)">Passo 1 de 2</div>
+          <h3>Cadastrar filial</h3>
+          <p>Depois você adiciona a equipe e os convites de encaixe começam a rodar.</p>
+        </div>
+        <div class="form">
+          <div class="field">
+            <label for="f-nome">Nome da unidade</label>
+            <input id="f-nome" placeholder="ex: Icaraí">
+          </div>
+          <div class="duo">
+            <div class="field">
+              <label for="f-cid">Cidade</label>
+              <input id="f-cid" placeholder="Niterói">
+            </div>
+            <div class="field uf">
+              <label for="f-uf">UF</label>
+              <input id="f-uf" placeholder="RJ" maxlength="2">
+            </div>
+          </div>
+          <div class="field">
+            <label for="f-end">Endereço</label>
+            <input id="f-end" placeholder="Rua, número, bairro">
+          </div>
+          <div class="field">
+            <label for="f-hor">Funcionamento</label>
+            <input id="f-hor" value="Seg a sáb, 09:00 às 19:00">
+          </div>
+          <div class="field">
+            <label>Meta de ocupação</label>
+            <div class="seg" id="seg-meta">
+              <button class="segbtn" aria-pressed="false">70%</button>
+              <button class="segbtn" aria-pressed="true">80%</button>
+              <button class="segbtn" aria-pressed="false">90%</button>
+            </div>
+          </div>
+          <p class="hint">A meta define quando a unidade entra na lista de alertas do painel.</p>
+        </div>
+        <div class="actions">
+          <button class="cta" data-goto="equipe">Continuar</button>
+          <button class="cta ghost" data-back="unidades">Cancelar</button>
+        </div>
+      </section>
+
+      <!-- ================= REDE · EQUIPE ================= -->
+      <section class="view" id="v-equipe">
+        <div class="lead">
+          <div class="k" style="color:var(--accent)">Passo 2 de 2</div>
+          <h3>Adicionar a equipe</h3>
+          <p>Cada pessoa recebe um convite e escolhe a própria senha.</p>
+        </div>
+
+        <div class="seclabel">Como você quer cadastrar</div>
+        <div class="form">
+          <div class="seg" id="seg-modo">
+            <button class="segbtn" aria-pressed="true" data-modo="colar">Colar lista</button>
+            <button class="segbtn" aria-pressed="false" data-modo="planilha">Planilha</button>
+            <button class="segbtn" aria-pressed="false" data-modo="link">Link</button>
+          </div>
+        </div>
+
+        <div class="form" id="modo-colar">
+          <textarea class="paste" id="emails" placeholder="ana.beatriz@rede.com.br
+fernanda.rocha@rede.com.br
+camila.dias@rede.com.br"></textarea>
+          <p class="hint">Um e-mail por linha. Você define a função de cada uma na lista abaixo.</p>
+        </div>
+
+        <div class="form" id="modo-planilha" hidden>
+          <button class="cta ghost" id="importar">Selecionar arquivo .xlsx ou .csv</button>
+          <p class="hint">Colunas esperadas: nome, e-mail, função, serviço principal.</p>
+        </div>
+
+        <div class="form" id="modo-link" hidden>
+          <div class="linkbox">
+            <span>nossastartup.com.br/entrar/icarai-7k2f</span>
+            <button class="copy" id="copiar">Copiar</button>
+          </div>
+          <p class="hint">Quem abrir o link entra direto nesta filial como profissional. O link expira em 7 dias.</p>
+        </div>
+
+        <div class="seclabel">Equipe da filial <span id="eq-n" style="color:var(--ink-3)">(3)</span></div>
+        <div id="lista-equipe">
+          <button class="memb" data-role>
+            <span class="mav">AB</span>
+            <span style="flex:1;min-width:0">
+              <span class="mn">Ana Beatriz</span>
+              <span class="mm">ana.beatriz@rede.com.br</span>
+            </span>
+            <span class="role" data-r="Profissional">Profissional</span>
+          </button>
+          <button class="memb" data-role>
+            <span class="mav">FR</span>
+            <span style="flex:1;min-width:0">
+              <span class="mn">Fernanda Rocha</span>
+              <span class="mm">fernanda.rocha@rede.com.br</span>
+            </span>
+            <span class="role" data-r="Profissional">Profissional</span>
+          </button>
+          <button class="memb" data-role>
+            <span class="mav">CD</span>
+            <span style="flex:1;min-width:0">
+              <span class="mn">Camila Dias</span>
+              <span class="mm">camila.dias@rede.com.br</span>
+            </span>
+            <span class="role" data-r="Recepção">Recepção</span>
+          </button>
+        </div>
+        <p class="caption" style="padding-top:8px">Toque na função para alternar entre profissional, recepção e gestor.</p>
+
+        <div class="actions">
+          <button class="cta" id="convidar">Enviar 3 convites</button>
+          <button class="cta ghost" data-back="unidades">Fazer isso depois</button>
+        </div>
+      </section>
+
+      <!-- ================= REDE · FILIAL CRIADA ================= -->
+      <section class="view" id="v-filialok">
+        <div class="done">
+          <div class="seal">✓</div>
+          <h3 id="ok-nome">Filial Icaraí criada</h3>
+          <p>Os convites foram enviados. Assim que cada pessoa aceitar, a agenda dela entra no painel da rede.</p>
+          <div class="receipt">
+            <div class="rline"><span class="rk">Unidade</span><span class="rv" id="ok-un">Icaraí · RJ</span></div>
+            <div class="rline"><span class="rk">Meta de ocupação</span><span class="rv" id="ok-meta">80%</span></div>
+            <div class="rline"><span class="rk">Convites enviados</span><span class="rv" id="ok-conv">3</span></div>
+            <div class="rline total"><span class="rk">Status</span><span class="rv">aguardando aceite</span></div>
+          </div>
+        </div>
+        <div class="seclabel">Convites pendentes</div>
+        <div class="memb">
+          <span class="mav">AB</span>
+          <span style="flex:1;min-width:0"><span class="mn">Ana Beatriz</span><span class="mm">profissional</span></span>
+          <span class="statusdot pend">pendente</span>
+        </div>
+        <div class="memb">
+          <span class="mav">FR</span>
+          <span style="flex:1;min-width:0"><span class="mn">Fernanda Rocha</span><span class="mm">profissional</span></span>
+          <span class="statusdot pend">pendente</span>
+        </div>
+        <div class="memb">
+          <span class="mav">CD</span>
+          <span style="flex:1;min-width:0"><span class="mn">Camila Dias</span><span class="mm">recepção</span></span>
+          <span class="statusdot act">aceitou</span>
+        </div>
+        <div class="actions"><button class="cta" data-back="unidades">Ver unidades</button></div>
+      </section>
+
+      <!-- ================= REDE · ALERTAS ================= -->
+      <section class="view" id="v-alertas">
+        <div class="hd"><h2>Alertas</h2><span class="count">3 abertos</span></div>
+        <button class="alertitem" data-goto="unidade">
+          <span class="sev crit">!</span>
+          <span style="flex:1;min-width:0">
+            <span class="al-t">Tijuca perdeu 38 horários em 7 dias</span>
+            <span class="al-d">Duas recepcionistas de licença. Nenhum convite de encaixe disparado desde segunda.</span>
+          </span>
+          <span class="al-w">há 2h</span>
+        </button>
+        <div class="alertitem">
+          <span class="sev warn">▲</span>
+          <span style="flex:1;min-width:0">
+            <span class="al-t">Campo Grande tem 3 profissionais sem confirmar agenda</span>
+            <span class="al-d">Sexta costuma ser o dia de maior falta na unidade.</span>
+          </span>
+          <span class="al-w">há 5h</span>
+        </div>
+        <div class="alertitem">
+          <span class="sev info">i</span>
+          <span style="flex:1;min-width:0">
+            <span class="al-t">Moema bateu a meta pelo quarto mês seguido</span>
+            <span class="al-d">A unidade aceita 96% dos convites sugeridos. Vale replicar o processo.</span>
+          </span>
+          <span class="al-w">ontem</span>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- ================= TABBAR ================= -->
+    <nav class="tabbar" id="tabbar" hidden></nav>
+  </div>
+</div>
+
+<script>
+(function(){
+  var $ = function(id){ return document.getElementById(id); };
+  var views = {};
+  Array.prototype.forEach.call(document.querySelectorAll('.view'), function(v){
+    views[v.id.replace('v-','')] = v;
+  });
+
+  var topbar = $('topbar'), tabbar = $('tabbar');
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var timers = [];
+  var perfil = null, current = 'login';
+
+  var TABS = {
+    pro:  [{id:'agenda', i:'▤', t:'Hoje'}, {id:'fila', i:'☰', t:'Fila'}, {id:'clientes', i:'☺', t:'Clientes'}, {id:'ganhos', i:'▲', t:'Ganhos'}],
+    rede: [{id:'painel', i:'▦', t:'Painel'}, {id:'unidades', i:'⌂', t:'Unidades'}, {id:'equipeun', i:'☺', t:'Equipe'}, {id:'alertas', i:'!', t:'Alertas'}],
+    gestao: [{id:'painel', i:'▦', t:'Painel'}, {id:'equipeun', i:'☺', t:'Equipe'}, {id:'alertas', i:'!', t:'Alertas'}]
+  };
+  // cada conta tem um vinculo: onde ela entra, com que marca e com que papel
+  var CONTAS = {
+    pro:    {marca:'Studio Marli',    sigla:'SM', tabs:'pro',    raiz:'agenda'},
+    rede:   {marca:'Rede Bellavita',  sigla:'RB', tabs:'rede',   raiz:'painel'},
+    gestao:   {marca:'Barbearia Costa', sigla:'BC', tabs:'gestao', raiz:'painel'},
+    barbeiro: {marca:'Barbearia Costa', sigla:'BC', tabs:'pro',    raiz:'agenda'}
+  };
+  var SUB = {
+    agenda:'agenda de hoje', fila:'quem está esperando', clientes:'sua carteira de clientes', ganhos:'seus resultados',
+    revisar:'revisar antes de enviar',
+    slot:'vaga das 11:00', send:'enviando convites', done:'vaga preenchida', wa:'prévia da mensagem',
+    painel:'12 unidades · 4 estados', unidades:'12 unidades · 4 estados', unidade:'unidade Tijuca',
+    alertas:'alertas da rede', novafilial:'nova filial', equipe:'nova filial · equipe', filialok:'filial criada',
+    contexto:'escolher acesso', importar:'importar clientes', impwa:'conectar WhatsApp',
+    impcontatos:'contatos do celular', impplanilha:'importar planilha', impmanual:'cadastro manual', revisarimport:'revisar importação', importok:'importação concluída', servico:'tempo do serviço', equipeun:'equipe da unidade', profissional:'perfil do profissional', novofunc:'novo funcionário'
+  };
+  var ROOTS = {pro:'agenda', rede:'painel', gestao:'painel', barbeiro:'agenda'};
+  var multiplosAcessos = false;
+
+  function clearTimers(){ timers.forEach(clearTimeout); timers = []; }
+
+  function go(name){
+    clearTimers();
+    current = name;
+    for (var k in views) views[k].classList.toggle('on', k === name);
+    views[name].scrollTop = 0;
+
+    var PUBLICAS = ['login','recuperar','enviado','novasenha','senhaok','contexto'];
+    var logged = (PUBLICAS.indexOf(name) === -1);
+    var semChrome = (name === 'wa');
+    topbar.hidden = !logged || semChrome;
+    tabbar.hidden = !logged || semChrome;
+    if (!logged || semChrome) return;
+
+    var conta = CONTAS[perfil] || CONTAS.pro;
+    var sub = SUB[name] || '';
+    if (conta.tabs === 'gestao' && (name === 'painel' || name === 'unidades')) sub = '1 unidade · 4 barbeiros';
+    $('tb-sub').textContent = sub;
+    $('tb-mark').textContent = conta.sigla;
+    $('tb-brand').textContent = conta.marca;
+    $('eq-titulo').textContent = (conta.tabs === 'gestao') ? 'Equipe da barbearia' : 'Equipe da Tijuca';
+    $('tb-act').textContent = multiplosAcessos ? 'Trocar' : 'Sair';
+    Array.prototype.forEach.call(tabbar.children, function(b){
+      b.setAttribute('aria-selected', b.dataset.id === name ? 'true' : 'false');
+    });
+  }
+
+  var PAINEL = {
+    rede: {
+      valor:'R$ 47.320', sub:'612 vagas reocupadas nas 12 unidades da rede.',
+      t1l:'Ocupação média da rede', t1v:'81%', t3l:'Unidades acima da meta', t3v:'8 de 12',
+      grafT:'Ocupação por unidade', grafC:'5 de 12 unidades. Tijuca está abaixo da meta de 80%.',
+      barras:[['Moema',94],['Batel',89],['Savassi',85],['Barra',78],['Tijuca',61]],
+      alT:'Tijuca perdeu 38 horários em 7 dias',
+      alD:'Duas recepcionistas de licença. Nenhum convite de encaixe foi disparado desde segunda.'
+    },
+    gestao: {
+      valor:'R$ 3.980', sub:'52 horários reocupados pelos 4 barbeiros neste mês.',
+      t1l:'Ocupação da barbearia', t1v:'84%', t3l:'Barbeiros acima da meta', t3v:'3 de 4',
+      grafT:'Ocupação por barbeiro', grafC:'O Thiago está abaixo da meta de 80% da casa.',
+      barras:[['Rafael',93],['Diego',88],['Léo',81],['Thiago',67]],
+      alT:'Thiago perdeu 11 horários em 7 dias',
+      alD:'Ele não está usando os convites de encaixe. Dá para ligar no perfil dele.'
+    }
+  };
+  function pintarPainel(){
+    var d = PAINEL[(CONTAS[perfil] || {}).tabs === 'gestao' ? 'gestao' : 'rede'];
+    $('pn-valor').textContent = d.valor;
+    $('pn-sub').textContent = d.sub;
+    $('pn-t1l').textContent = d.t1l; $('pn-t1v').textContent = d.t1v;
+    $('pn-t3l').textContent = d.t3l; $('pn-t3v').textContent = d.t3v;
+    $('pn-graf-t').textContent = d.grafT; $('pn-graf-c').textContent = d.grafC;
+    $('pn-al-t').textContent = d.alT; $('pn-al-d').textContent = d.alD;
+    var maior = Math.max.apply(null, d.barras.map(function(b){ return b[1]; }));
+    $('pn-graf').innerHTML = d.barras.map(function(b){
+      var fraco = b[1] < 80 ? ' dim' : '';
+      return '<div class="barrow"><span class="blab">' + b[0] + '</span>' +
+             '<span class="btrack"><span class="bfill' + fraco + '" style="width:' +
+             Math.round(b[1] / maior * 100) + '%"></span></span>' +
+             '<span class="bval">' + b[1] + '%</span></div>';
+    }).join('');
+  }
+
+  function buildTabs(){
+    tabbar.innerHTML = '';
+    var conjunto = (CONTAS[perfil] || CONTAS.pro).tabs;
+    TABS[conjunto].forEach(function(t){
+      var b = document.createElement('button');
+      b.className = 'tab'; b.dataset.id = t.id; b.setAttribute('aria-selected','false');
+      b.innerHTML = '<span class="ti">' + t.i + '</span><span class="tt">' + t.t + '</span>';
+      b.addEventListener('click', function(){ go(t.id); });
+      tabbar.appendChild(b);
+    });
+  }
+
+  function login(p){
+    perfil = p;
+    buildTabs();
+    pintarPainel();
+    go(CONTAS[p].raiz);
+  }
+
+  Array.prototype.forEach.call(document.querySelectorAll('[data-perfil]'), function(b){
+    b.addEventListener('click', function(){
+      if (b.dataset.perfil === 'duplo') {   // conta com dois vínculos no mesmo lugar
+        multiplosAcessos = true;
+        go('contexto');
+      } else {
+        multiplosAcessos = false;
+        login(b.dataset.perfil);
+      }
+    });
+  });
+  Array.prototype.forEach.call(document.querySelectorAll('[data-entrar]'), function(b){
+    b.addEventListener('click', function(){ login(b.dataset.entrar); });
+  });
+  $('entrar').addEventListener('click', function(){ login('pro'); });
+
+  // ---- esqueci minha senha ----
+  var forgot = document.querySelector('.forgot');
+  forgot.addEventListener('click', function(){
+    $('r-mail').value = $('mail').value;
+    $('r-erro').hidden = true;
+    go('recuperar');
+  });
+
+  $('enviarlink').addEventListener('click', function(){
+    var mail = $('r-mail').value.trim();
+    var valido = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(mail);
+    $('r-erro').hidden = valido;
+    if (!valido) { $('r-mail').focus(); return; }
+    $('e-dest').textContent = mail;
+    $('reenviar').textContent = 'Enviar de novo';
+    $('reenviar').disabled = false;
+    go('enviado');
+  });
+
+  var reenviar = $('reenviar');
+  reenviar.addEventListener('click', function(){
+    var seg = 30;
+    reenviar.disabled = true;
+    reenviar.textContent = 'Reenviado. Aguarde ' + seg + 's';
+    var conta = setInterval(function(){
+      seg -= 1;
+      if (seg <= 0) {
+        clearInterval(conta);
+        reenviar.disabled = false;
+        reenviar.textContent = 'Enviar de novo';
+      } else {
+        reenviar.textContent = 'Reenviado. Aguarde ' + seg + 's';
+      }
+    }, 1000);
+  });
+
+  $('salvarsenha').addEventListener('click', function(){
+    var a = $('n1').value, b = $('n2').value;
+    var ok = a.length >= 8 && a === b;
+    $('n-erro').hidden = ok;
+    if (!ok) { $('n1').focus(); return; }
+    $('n1').value = ''; $('n2').value = '';
+    go('senhaok');
+  });
+
+  $('tb-act').addEventListener('click', function(){
+    if (multiplosAcessos) { go('contexto'); return; }   // trocar de acesso, sem sair da conta
+    perfil = null;
+    $('mail').value = ''; $('pass').value = '';
+    go('login');
+  });
+
+  // navegacao por data-atributos
+  Array.prototype.forEach.call(document.querySelectorAll('[data-goto]'), function(el){
+    el.addEventListener('click', function(){ go(el.dataset.goto); });
+  });
+  Array.prototype.forEach.call(document.querySelectorAll('[data-back]'), function(el){
+    el.addEventListener('click', function(){ go(el.dataset.back); });
+  });
+
+  // ---- fluxo da vaga ----
+  var cands = Array.prototype.slice.call(document.querySelectorAll('.cand'));
+  var sendBtn = $('send');
+  function selecionadas(){
+    return cands.filter(function(c){ return c.getAttribute('aria-pressed') === 'true'; })
+                .map(function(c){ return c.dataset.n; });
+  }
+  function refreshCta(){
+    var n = selecionadas().length;
+    sendBtn.textContent = n === 0 ? 'Selecione quem chamar' : 'Revisar e enviar para ' + n;
+    sendBtn.disabled = (n === 0);
+  }
+  cands.forEach(function(c){
+    c.addEventListener('click', function(){
+      c.setAttribute('aria-pressed', c.getAttribute('aria-pressed') === 'true' ? 'false' : 'true');
+      refreshCta();
+    });
+  });
+  refreshCta();
+
+  $('openslot').addEventListener('click', function(){ go('slot'); });
+
+  // modo de envio: uma por vez (padrao) ou todas juntas
+  var modoEnvio = 'fila';
+  var TXT_MODO = {
+    fila: 'Chamamos a Bruna primeiro e esperamos 10 minutos. Se ela não responder, seguimos para a próxima. Ninguém recebe a promessa do mesmo horário ao mesmo tempo.',
+    todas: 'Todas recebem ao mesmo tempo. Preenche mais rápido, mas quem responder depois vai ouvir de você que a vaga já foi.'
+  };
+  segmented($('seg-envio'), function(b){
+    modoEnvio = b.dataset.envio;
+    var h = $('modo-h');
+    h.textContent = TXT_MODO[modoEnvio];
+    h.classList.toggle('risco', modoEnvio === 'todas');
+    // todas juntas marca todo mundo; uma por vez volta para a primeira da lista
+    cands.forEach(function(c, i){
+      c.setAttribute('aria-pressed', modoEnvio === 'todas' ? 'true' : (i === 0 ? 'true' : 'false'));
+    });
+    refreshCta();
+  });
+
+  // captura de pedido vindo do WhatsApp
+  $('captura').addEventListener('click', function(){
+    $('cap-a').textContent = 'Guardada';
+    $('captura').style.background = 'var(--ok-soft)';
+    $('captura').disabled = true;
+  });
+  $('peek').addEventListener('click', function(){ go('wa'); });
+  $('waback').addEventListener('click', function(){ go('slot'); });
+
+  var log = $('log');
+
+  // etapa nova: revisar antes de enviar
+  function montarPassos(chosen){
+    if (!chosen.length) return;
+    $('rev-quem').textContent = chosen[0];
+    var passos = $('passos');
+    passos.innerHTML = '';
+    var lista = [];
+    if (modoEnvio === 'fila') {
+      lista.push('Enviamos para <b>' + chosen[0] + '</b> e seguramos o horário por 10 minutos.');
+      if (chosen.length > 1) lista.push('Sem resposta, seguimos para <b>' + chosen[1] + '</b>.');
+      lista.push('Quem aceitar primeiro fica com a vaga. As outras não chegam a receber a promessa.');
+    } else {
+      lista.push('Enviamos para as <b>' + chosen.length + '</b> ao mesmo tempo.');
+      lista.push('Quem responder primeiro fica com a vaga.');
+      lista.push('As demais recebem um aviso de que o horário já foi ocupado.');
+    }
+    lista.push('Você recebe um aviso aqui assim que alguém responder.');
+    lista.forEach(function(t, i){
+      var el = document.createElement('div');
+      el.className = 'passo';
+      el.innerHTML = '<span class="num">' + (i + 1) + '</span><span class="passo-t">' + t + '</span>';
+      passos.appendChild(el);
+    });
+  }
+  montarPassos(selecionadas());
+  sendBtn.addEventListener('click', function(){
+    montarPassos(selecionadas());
+    go('revisar');
+  });
+
+  $('editar').addEventListener('click', function(){
+    $('editar').textContent = 'Mensagem liberada para edição';
+  });
+
+  $('aprovar').addEventListener('click', function(){
+    var chosen = selecionadas();
+    log.innerHTML = '';
+    go('send');
+    var steps;
+    if (modoEnvio === 'fila') {
+      steps = [{ txt: 'Convite enviado para ' + chosen[0].split(' ')[0], time: '09:41' },
+               { txt: 'Horário segurado por 10 minutos', time: '09:41' },
+               { txt: chosen[0].split(' ')[0] + ' respondeu: quero!', time: '09:45', win: true }];
+    } else {
+      steps = chosen.map(function(nome, i){
+        return { txt: 'Convite enviado para ' + nome.split(' ')[0], time: '09:4' + (1 + i) };
+      });
+      steps.push({ txt: chosen[0].split(' ')[0] + ' respondeu: quero!', time: '09:45', win: true });
+    }
+    steps.forEach(function(s, i){
+      timers.push(setTimeout(function(){
+        var el = document.createElement('div');
+        el.className = 'logline';
+        el.innerHTML = '<span class="tick">' + (s.win ? '★' : '✓') + '</span><span>' + s.txt +
+                       '</span><span class="logtime">' + s.time + '</span>';
+        log.appendChild(el);
+        requestAnimationFrame(function(){ el.classList.add('in'); });
+      }, reduce ? 0 : 700 * (i + 1)));
+    });
+    $('send-sub').textContent = (modoEnvio === 'fila')
+      ? 'Chamando uma de cada vez, com o horário segurado.'
+      : 'Todas foram avisadas ao mesmo tempo.';
+    timers.push(setTimeout(function(){ go('done'); }, reduce ? 900 : 700 * (steps.length + 1) + 900));
+  });
+
+  $('tolist').addEventListener('click', function(){
+    var slot = $('openslot');
+    if (slot) {
+      slot.outerHTML =
+        '<div class="rows"><div class="row"><div class="t">11:00</div>' +
+        '<div class="rmain"><div class="rname">Bruna Cardoso</div>' +
+        '<div class="rmeta">encaixe aceito às 09:45</div></div>' +
+        '<span class="tag ok">confirmado</span></div></div>';
+      $('money').textContent = 'R$ 340';
+      $('filled').textContent = '4 de 5';
+      $('cnt').textContent = '8 atendimentos';
+    }
+    go('agenda');
+  });
+
+  // ---- acao do gestor ----
+  var ativar = $('ativar');
+  ativar.addEventListener('click', function(){
+    ativar.textContent = 'Convites ativados para 6 profissionais';
+    ativar.disabled = true;
+  });
+
+  // ---- cadastro de filial ----
+  function segmented(el, onPick){
+    Array.prototype.forEach.call(el.children, function(b){
+      b.addEventListener('click', function(){
+        Array.prototype.forEach.call(el.children, function(o){ o.setAttribute('aria-pressed','false'); });
+        b.setAttribute('aria-pressed','true');
+        if (onPick) onPick(b);
+      });
+    });
+  }
+  segmented($('seg-meta'));
+  segmented($('seg-modo'), function(b){
+    ['colar','planilha','link'].forEach(function(m){
+      $('modo-' + m).hidden = (m !== b.dataset.modo);
+    });
+  });
+
+  $('copiar').addEventListener('click', function(){
+    $('copiar').textContent = 'Copiado';
+  });
+  $('importar').addEventListener('click', function(){
+    $('importar').textContent = 'equipe-icarai.xlsx · 3 pessoas lidas';
+    $('importar').disabled = true;
+  });
+
+  // funcao de cada pessoa: toque alterna
+  var PAPEIS = ['Profissional','Recepção','Gestor'];
+  Array.prototype.forEach.call(document.querySelectorAll('[data-role]'), function(m){
+    m.addEventListener('click', function(){
+      var chip = m.querySelector('.role');
+      var i = PAPEIS.indexOf(chip.dataset.r);
+      var novo = PAPEIS[(i + 1) % PAPEIS.length];
+      chip.dataset.r = novo;
+      chip.textContent = novo;
+    });
+  });
+
+  // novos e-mails colados entram na lista
+  var emails = $('emails');
+  emails.addEventListener('blur', function(){
+    var linhas = emails.value.split('\n').map(function(l){ return l.trim(); }).filter(Boolean);
+    if (!linhas.length) return;
+    var lista = $('lista-equipe');
+    var existentes = Array.prototype.map.call(lista.querySelectorAll('.mm'), function(e){ return e.textContent; });
+    linhas.forEach(function(mail){
+      if (existentes.indexOf(mail) !== -1 || mail.indexOf('@') === -1) return;
+      var nome = mail.split('@')[0].replace(/[._]/g, ' ')
+        .replace(/\b\w/g, function(c){ return c.toUpperCase(); });
+      var ini = nome.split(' ').slice(0,2).map(function(w){ return w[0]; }).join('');
+      var b = document.createElement('button');
+      b.className = 'memb';
+      b.innerHTML = '<span class="mav">' + ini + '</span>' +
+        '<span style="flex:1;min-width:0"><span class="mn">' + nome + '</span>' +
+        '<span class="mm">' + mail + '</span></span>' +
+        '<span class="role" data-r="Profissional">Profissional</span>';
+      b.addEventListener('click', function(){
+        var chip = b.querySelector('.role');
+        var i = PAPEIS.indexOf(chip.dataset.r);
+        var novo = PAPEIS[(i + 1) % PAPEIS.length];
+        chip.dataset.r = novo; chip.textContent = novo;
+      });
+      lista.appendChild(b);
+    });
+    emails.value = '';
+    atualizaEquipe();
+  });
+
+  function atualizaEquipe(){
+    var n = $('lista-equipe').children.length;
+    $('eq-n').textContent = '(' + n + ')';
+    $('convidar').textContent = n === 1 ? 'Enviar 1 convite' : 'Enviar ' + n + ' convites';
+    $('convidar').disabled = (n === 0);
+  }
+  atualizaEquipe();
+
+  $('convidar').addEventListener('click', function(){
+    var nome = ($('f-nome').value || 'Icaraí').trim();
+    var cid  = ($('f-cid').value  || 'Niterói').trim();
+    var uf   = ($('f-uf').value   || 'RJ').trim().toUpperCase();
+    var meta = $('seg-meta').querySelector('[aria-pressed="true"]').textContent;
+    $('ok-nome').textContent = 'Filial ' + nome + ' criada';
+    $('ok-un').textContent = nome + ' · ' + uf;
+    $('ok-meta').textContent = meta;
+    $('ok-conv').textContent = String($('lista-equipe').children.length);
+    go('filialok');
+  });
+
+  // ---- importacao de clientes ----
+  var ORIGENS = {
+    wa:       {btn:'Conectar o WhatsApp Business', tela:'impwa'},
+    contatos: {btn:'Abrir meus contatos',          tela:'impcontatos'},
+    planilha: {btn:'Enviar uma planilha',          tela:'impplanilha'},
+    manual:   {btn:'Cadastrar uma cliente',        tela:'impmanual'}
+  };
+  var origem = 'wa';
+  Array.prototype.forEach.call(document.querySelectorAll('[data-origem]'), function(b){
+    b.addEventListener('click', function(){
+      Array.prototype.forEach.call(document.querySelectorAll('[data-origem]'), function(o){ o.classList.remove('on'); });
+      b.classList.add('on');
+      origem = b.dataset.origem;
+      $('ir-import').textContent = ORIGENS[origem].btn;
+    });
+  });
+  $('ir-import').addEventListener('click', function(){ go(ORIGENS[origem].tela); });
+
+  // WhatsApp: autoriza, analisa e leva para a revisão
+  $('conectar-wa').addEventListener('click', function(){
+    $('conectar-wa').textContent = 'Analisando suas conversas...';
+    $('conectar-wa').disabled = true;
+    timers.push(setTimeout(function(){
+      $('conectar-wa').textContent = 'Autorizar e analisar conversas';
+      $('conectar-wa').disabled = false;
+      resultado('WhatsApp', 84, 12, 9);
+      go('revisarimport');
+    }, reduce ? 0 : 1400));
+  });
+
+  // Contatos: nada vem marcado, porque nao existe historico
+  var cts = Array.prototype.slice.call(document.querySelectorAll('.cli.ct'));
+  function contarContatos(){
+    var n = cts.filter(function(c){ return c.getAttribute('aria-pressed') === 'true'; }).length;
+    $('ct-n').textContent = n + (n === 1 ? ' marcado' : ' marcados');
+    $('ct-import').textContent = n === 0 ? 'Selecione quem é cliente'
+                               : n === 1 ? 'Importar 1 contato' : 'Importar ' + n + ' contatos';
+    $('ct-import').disabled = (n === 0);
+  }
+  cts.forEach(function(c){
+    c.addEventListener('click', function(){
+      c.setAttribute('aria-pressed', c.getAttribute('aria-pressed') === 'true' ? 'false' : 'true');
+      contarContatos();
+    });
+  });
+  $('ct-todos').addEventListener('click', function(){
+    var marcar = cts.some(function(c){ return c.getAttribute('aria-pressed') === 'false'; });
+    cts.forEach(function(c){ c.setAttribute('aria-pressed', marcar ? 'true' : 'false'); });
+    $('ct-todos').textContent = marcar ? 'Desmarcar todos' : 'Marcar todos';
+    contarContatos();
+  });
+  contarContatos();
+  $('ct-import').addEventListener('click', function(){
+    var n = cts.filter(function(c){ return c.getAttribute('aria-pressed') === 'true'; }).length;
+    resultado('lista de contatos', n, 0, 0);
+    go('importok');
+  });
+
+  // Planilha: primeiro o arquivo, depois o mapeamento das colunas
+  $('arquivo').addEventListener('click', function(){
+    $('arquivo').classList.add('cheio');
+    $('arq-t').textContent = 'clientes-studio-marli.xlsx';
+    $('arq-d').textContent = '96 linhas · 4 colunas · 38 KB';
+    $('mapa').hidden = false;
+    $('pl-import').textContent = 'Importar 94 clientes';
+    $('pl-import').disabled = false;
+  });
+  $('pl-import').addEventListener('click', function(){
+    resultado('planilha', 94, 0, 0);
+    go('importok');
+  });
+
+  // Manual: cadastra uma pessoa por vez, com validação e confirmação
+  var salvas = [];
+  segmented($('seg-encaixe'));
+
+  // máscara de telefone conforme digita
+  var campoTel = $('mn-tel');
+  campoTel.addEventListener('input', function(){
+    var d = campoTel.value.replace(/\D/g, '').slice(0, 11);
+    var v = d;
+    if (d.length > 2)  v = '(' + d.slice(0,2) + ') ' + d.slice(2);
+    if (d.length > 6)  v = '(' + d.slice(0,2) + ') ' + d.slice(2, d.length > 10 ? 7 : 6) +
+                           '-' + d.slice(d.length > 10 ? 7 : 6);
+    campoTel.value = v;
+  });
+
+  function erro(campo, mostrar){
+    $('err-' + campo).hidden = !mostrar;
+    $('mn-' + campo).parentNode.classList.toggle('invalido', mostrar);
+  }
+  function digitos(t){ return t.replace(/\D/g, ''); }
+
+  function pintarSalvas(){
+    $('mn-n').textContent = '(' + salvas.length + ')';
+    $('mn-bloco').hidden = (salvas.length === 0);
+    $('mn-lista').innerHTML = salvas.map(function(c){
+      return '<div class="memb"><span class="mav">' + c.ini + '</span>' +
+             '<span style="flex:1;min-width:0"><span class="mn">' + c.nome + '</span>' +
+             '<span class="mm">' + c.tel + ' · ' + c.servico + '</span></span>' +
+             '<span class="statusdot act">salva</span></div>';
+    }).join('');
+    $('mn-conta').textContent = salvas.length === 0
+      ? 'Nenhuma cliente cadastrada ainda. Preencha os campos acima e salve.'
+      : (salvas.length === 1 ? 'Toque em Concluir quando terminar.' : 'Toque em Concluir quando terminar.');
+  }
+
+  $('mn-salvar').addEventListener('click', function(){
+    var nome = $('mn-nome').value.trim();
+    var tel  = digitos(campoTel.value);
+    var okNome = nome.length >= 2;
+    var okTel  = tel.length === 10 || tel.length === 11;
+    erro('nome', !okNome);
+    erro('tel',  !okTel);
+    if (!okNome) { $('mn-nome').focus(); return; }
+    if (!okTel)  { campoTel.focus(); return; }
+
+    var repetida = salvas.filter(function(c){ return digitos(c.tel) === tel; })[0];
+    if (repetida) {
+      $('err-tel').textContent = 'Este telefone já foi cadastrado para ' + repetida.nome + '.';
+      erro('tel', true);
+      campoTel.focus();
+      return;
+    }
+    $('err-tel').textContent = 'Telefone incompleto. Use DDD mais 8 ou 9 dígitos.';
+
+    var servicoEl = document.querySelector('#v-impmanual .serv.on .serv-n');
+    salvas.push({
+      nome: nome,
+      tel: campoTel.value,
+      servico: servicoEl ? servicoEl.textContent : 'sem serviço definido',
+      ini: nome.split(' ').slice(0,2).map(function(w){ return w[0]; }).join('').toUpperCase()
+    });
+
+    $('mn-aviso-t').textContent = nome.split(' ')[0] + ' foi salva';
+    $('mn-aviso-d').textContent = 'Ela já pode receber convite quando abrir uma vaga.';
+    $('mn-aviso').hidden = false;
+
+    $('mn-nome').value = ''; campoTel.value = ''; $('mn-obs').value = '';
+    pintarSalvas();
+    $('mn-nome').focus();
+  });
+
+  $('mn-desfazer').addEventListener('click', function(){
+    var removida = salvas.pop();
+    $('mn-aviso').hidden = true;
+    if (removida) {
+      $('mn-nome').value = removida.nome;
+      campoTel.value = removida.tel;
+    }
+    pintarSalvas();
+  });
+
+  $('mn-fim').addEventListener('click', function(){
+    if (!salvas.length) { go('clientes'); return; }
+    resultado('cadastro manual', salvas.length, 0, 0);
+    go('importok');
+  });
+  pintarSalvas();
+
+  // o resultado conta a historia da origem que foi usada
+  function resultado(fonte, total, pediram, fila){
+    $('ok-total').textContent = total + (total === 1 ? ' cliente na sua base' : ' clientes na sua base');
+    $('ok-fonte-l').textContent = 'Vieram de: ' + fonte;
+    $('ok-fonte-v').textContent = String(total);
+    $('ok-pediram').textContent = String(pediram);
+    $('ok-fila').textContent = String(fila);
+    $('ok-linha-pediram').hidden = (pediram === 0);
+    $('ok-linha-fila').hidden = (fila === 0);
+    $('ok-prontas').textContent = String(total);
+    $('ok-nota').textContent = pediram
+      ? 'A partir de agora, quando abrir uma vaga, já temos quem chamar.'
+      : 'Marque quem aceita encaixe no mesmo dia para as sugestões ficarem melhores.';
+  }
+
+  var clis = Array.prototype.slice.call(document.querySelectorAll('.cli'));
+  function contarClientes(){
+    var n = clis.filter(function(c){ return c.getAttribute('aria-pressed') === 'true'; }).length;
+    $('confirmar-import').textContent = n === 0 ? 'Selecione quem é cliente'
+                                      : n === 1 ? 'Importar 1 cliente' : 'Importar ' + n + ' clientes';
+    $('confirmar-import').disabled = (n === 0);
+  }
+  clis.forEach(function(c){
+    c.addEventListener('click', function(){
+      c.setAttribute('aria-pressed', c.getAttribute('aria-pressed') === 'true' ? 'false' : 'true');
+      contarClientes();
+    });
+  });
+  contarClientes();
+  $('confirmar-import').addEventListener('click', function(){ go('importok'); });
+
+  // ---- medicao de tempo ----
+  $('medir').addEventListener('click', function(){
+    $('med-a').textContent = 'Anotado';
+    $('medir').style.background = 'var(--ok-soft)';
+    $('medir').disabled = true;
+  });
+  $('aceitar-tempo').addEventListener('click', function(){
+    $('aceitar-tempo').textContent = 'Gel agora reserva 1h05';
+    $('aceitar-tempo').disabled = true;
+  });
+
+  // ---- permissoes do profissional ----
+  Array.prototype.forEach.call(document.querySelectorAll('[data-toggle]'), function(c){
+    c.addEventListener('click', function(){
+      var ligado = c.classList.contains('on');
+      c.classList.toggle('on', !ligado);
+      c.classList.toggle('off', ligado);
+      c.textContent = ligado ? 'Desligado' : 'Ligado';
+    });
+  });
+  var ligar = $('ligar-convites');
+  ligar.addEventListener('click', function(){
+    var c = document.querySelectorAll('#v-profissional [data-toggle]')[0];
+    c.classList.remove('off'); c.classList.add('on'); c.textContent = 'Ligado';
+    ligar.textContent = 'Convites ligados para a Ana';
+    ligar.disabled = true;
+  });
+
+  // ---- servicos do novo funcionario ----
+  Array.prototype.forEach.call(document.querySelectorAll('.serv'), function(b){
+    b.addEventListener('click', function(){ b.classList.toggle('on'); });
+  });
+  segmented($('seg-func'));
+  $('convidar-func').addEventListener('click', function(){
+    var nome = ($('nf-nome').value || 'Thiago Souza').trim().split(' ')[0];
+    $('convidar-func').textContent = 'Convite enviado para ' + nome;
+    $('convidar-func').disabled = true;
+  });
+
+  // ---- link direto para uma tela: #pro/agenda, #rede/painel ----
+  function preencherLog(){
+    log.innerHTML = '';
+    [['Convite enviado para Bruna','09:41'],['Convite enviado para Renata','09:42'],['Bruna respondeu: quero!','09:45',1]]
+      .forEach(function(s){
+        var el = document.createElement('div');
+        el.className = 'logline in';
+        el.innerHTML = '<span class="tick">' + (s[2] ? '★' : '✓') + '</span><span>' + s[0] +
+                       '</span><span class="logtime">' + s[1] + '</span>';
+        log.appendChild(el);
+      });
+  }
+  var tema = (location.search.match(/tema=(claro|escuro)/) || [])[1];
+  if (tema) document.documentElement.setAttribute('data-theme', tema === 'claro' ? 'light' : 'dark');
+
+  function abrirHash(){
+    var h = (location.hash || '').replace('#','').split('/');
+    var p = h[0], tela = h[1];
+    if (!p) return;
+    if (p === 'duplo') { multiplosAcessos = true; go('contexto'); return; }
+    if (CONTAS[p]) {
+      perfil = p; buildTabs(); pintarPainel();
+      var destino = tela || CONTAS[p].raiz;
+      if (!views[destino]) destino = CONTAS[p].raiz;
+      if (destino === 'send') preencherLog();
+      go(destino);
+    } else if (views[p]) {
+      go(p);
+    }
+  }
+  abrirHash();
+  window.addEventListener('hashchange', abrirHash);
+
+  // ---- relogio ----
+  function tick(){
+    var d = new Date();
+    $('clock').textContent = String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+  }
+  tick(); setInterval(tick, 30000);
+})();
+</script>
+
+</body></html>
